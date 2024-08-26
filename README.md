@@ -1,4 +1,4 @@
-# wsl-nixos-config
+# NixOS Config
 My NixOS configuration.nix that I use for my WSL VMs
 
 ## Installing WSL with NixOS
