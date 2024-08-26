@@ -19,7 +19,7 @@ wsl --import NixOS --version 2 $env:USERPROFILE\NixOS\ nixos-wsl.tar.gz
 
 4. Set as default distribution:
 ```PowerShell
-wsl - NixOS
+wsl -s NixOS
 ```
 
 5. Run WSL
@@ -29,7 +29,7 @@ wsl
 
 ## Importing NixOS Config
 
-```zsh
+```bash
 cp configuration.nix /etc/nixos/configuration.nix
 sudo nix-channel --add https://github.com/nix-community/home-manager/archive/master.tar.gz home-manager
 sudo nix-channel --add https://github.com/nix-community/home-manager/archive/release-24.05.tar.gz home-manager
