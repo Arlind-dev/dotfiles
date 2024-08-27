@@ -19,6 +19,8 @@ in
     gcc
     git
     tree
+    unzip
+    ripgrep
     unstable.neovim
   ];
 
@@ -37,7 +39,7 @@ in
 
   programs.zsh = {
     enable = true;
-    oh-my-zsh.enable = true;
+    ohMyZsh.enable = true;
     shellAliases = {
       neovim = "nvim";
       vim = "nvim";
