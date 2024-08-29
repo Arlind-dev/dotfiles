@@ -1,4 +1,5 @@
 # NixOS Config
+
 My NixOS configuration.nix that I use for my NixOS VMs including my WSL.
 
 ## Installing WSL with NixOS
@@ -18,11 +19,13 @@ wsl --import NixOS --version 2 $env:USERPROFILE\NixOS\ nixos-wsl.tar.gz
 ```
 
 4. Set as default distribution:
+
 ```PowerShell
 wsl -s NixOS
 ```
 
 5. Run WSL
+
 ```PowerShell
 wsl
 ```
@@ -32,8 +35,8 @@ wsl
 ```bash
 cp configuration.nix /etc/nixos/configuration.nix
 sudo nix-channel --add https://github.com/nix-community/home-manager/archive/master.tar.gz home-manager
-sudo nix-channel --add https://github.com/nix-community/home-manager/archive/release-24.05.tar.gz home-manager
-sudo nix-channel --add https://nixos.org/channels/nixos-unstable nixos-unstable
+sudo nix-channel --add https://nixos.org/channels/nixos-unstable nixos
+sudo nix-channel --add https://nixos.org/channels/nixos-24.05 nixos-24.05
 sudo nix-channel --update
 sudo nixos-rebuild switch
 ```
