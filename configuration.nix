@@ -6,6 +6,8 @@
     <home-manager/nixos>
   ];
 
+  networking.firewall.enable = false;
+
   system.stateVersion = "24.11";
 
   wsl.enable = true;
@@ -26,17 +28,35 @@
     home = "/home/nixos";
     shell = pkgs.zsh;
     extraGroups = [ "docker" ];
+    initialHashedPassword = "$y$j9T$SjzV54a2Dt6SD6kL9E4tn/$3tFQ4kBfJBSDELii/8QHzraCAqoiINNljzZcD7m4AS3"; # nixos
   };
 
   users.users.root = {
-    shell = pkgs.bash;
+    shell = pkgs.zsh;
   };
 
   environment.systemPackages = with pkgs; [
     gcc
+    glibc
+    binutils
+    gnumake
+    cmake
     tree
     unzip
     ripgrep
+    ctop
+    htop
+    fastfetch
+    wget
+    tcpdump
+    python3
+    python3Packages.pip
+    nodejs
+    nodePackages.npm
+    bat
+    mysql-client
+    postgresql
+    sqlite
   ];
 
   environment.variables.EDITOR = "nvim";
@@ -55,6 +75,11 @@
     };
   };
 
+  programs.tmux = {
+    enable = true;
+    clock24 = true;
+  };
+
   programs.git = {
     enable = true;
   };
@@ -64,6 +89,32 @@
     defaultEditor = true;
     viAlias = true;
     vimAlias = true;
+  };
+
+  services.openssh = {
+    enable = true;
+    ports = [ 22 ];
+    settings = {
+      PasswordAuthentication = true;
+      UseDns = true;
+      X11Forwarding = true;
+      PermitRootLogin = "no";
+    };
+  };
+
+  services.xserver = {
+    enable = true;
+    desktopManager.plasma5.enable = true;
+  };
+
+  services.displayManager.sddm = {
+    enable = true;
+  };
+
+  services.xrdp = {
+    enable = true;
+    defaultWindowManager = "startplasma-x11";
+    openFirewall = true;
   };
 
   home-manager.users.nixos = {
