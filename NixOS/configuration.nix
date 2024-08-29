@@ -6,7 +6,10 @@
     <home-manager/nixos>
   ];
 
-  networking.firewall.enable = false;
+  networking.firewall = {
+    enable = true;
+    allowedTCPPorts = [ 22 80 443 3390 ];
+  };
 
   system.stateVersion = "24.11";
 
@@ -25,7 +28,7 @@
 
   users.users.nixos = {
     isNormalUser = true;
-    home = "/home/nixos";
+    home = "/mnt/wsl/home";
     shell = pkgs.zsh;
     extraGroups = [ "docker" ];
   };
@@ -117,7 +120,27 @@
     openFirewall = true;
   };
 
+  systemd.services.createHomeDir = {
+    description = "Create /mnt/wsl/home directory if it doesn't exist";
+    after = [ "local-fs.target" ];
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      ExecStart = "${pkgs.bash}/bin/bash -c ''\
+        if [ ! -d /mnt/wsl/home ]; then \
+          mkdir -p /mnt/wsl/home && \
+          chown nixos:nixos /mnt/wsl/home; \
+        fi''";
+      Type = "oneshot";
+      RemainAfterExit = false;
+    };
+  };
+
   home-manager.users.nixos = {
+    home.stateVersion = "24.11";
+  };
+
+  home-manager.users.root = {
     home.stateVersion = "24.11";
   };
 }
