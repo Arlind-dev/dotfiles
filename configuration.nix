@@ -6,7 +6,7 @@
     <home-manager/nixos>
   ];
 
-  system.stateVersion = "24.05";
+  system.stateVersion = "24.11";
 
   wsl.enable = true;
   wsl.defaultUser = "nixos";
@@ -28,12 +28,17 @@
     extraGroups = [ "docker" ];
   };
 
+  users.users.root = {
+    shell = pkgs.bash;
+  };
+
   environment.systemPackages = with pkgs; [
     gcc
     tree
     unzip
     ripgrep
   ];
+
   environment.variables.EDITOR = "nvim";
 
   virtualisation.docker.enable = true;
@@ -62,6 +67,6 @@
   };
 
   home-manager.users.nixos = {
-    home.stateVersion = "24.05";
+    home.stateVersion = "24.11";
   };
 }
