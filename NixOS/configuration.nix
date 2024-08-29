@@ -28,7 +28,7 @@
 
   users.users.nixos = {
     isNormalUser = true;
-    home = "/mnt/wsl/home"; # shared home directory
+    home = "/home/nixos";
     shell = pkgs.zsh;
     extraGroups = [ "docker" ];
   };
@@ -122,37 +122,6 @@
     port = 3390;
     defaultWindowManager = "startplasma-x11";
     openFirewall = true;
-  };
-
-  systemd.services.createHomeDir = {
-    description = "Create /mnt/wsl/home directory if it doesn't exist";
-    after = [ "local-fs.target" ];
-    wantedBy = [ "multi-user.target" ];
-
-    serviceConfig = {
-      ExecStart = "${pkgs.bash}/bin/bash -c ''\
-        if [ ! -d /mnt/wsl/home ]; then \
-          mkdir -p /mnt/wsl/home && \
-          chown nixos:nixos /mnt/wsl/home; \
-        fi''";
-      Type = "oneshot";
-      RemainAfterExit = false;
-    };
-  };
-
-  systemd.services.deleteHomeDir = {
-    description = "Delete /home/nixos directory if it exists";
-    after = [ "local-fs.target" ];
-    wantedBy = [ "multi-user.target" ];
-
-    serviceConfig = {
-      ExecStart = "${pkgs.bash}/bin/bash -c ''\
-        if [ -d /home/nixos ]; then \
-          rm -rf /home/nixos; \
-        fi''";
-      Type = "oneshot";
-      RemainAfterExit = false;
-    };
   };
 
   home-manager.users.nixos = {
