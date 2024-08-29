@@ -59,11 +59,24 @@
     mysql-client
     postgresql
     sqlite
+    docker-compose
+    podman-compose
+    podman-tui
   ];
 
   environment.variables.EDITOR = "nvim";
 
-  virtualisation.docker.enable = true;
+  virtualisation.docker = {
+    enable = true;
+    rootless = {
+      enable = true;
+      setSocketVariable = true;
+    };
+  };
+
+  virtualisation.podman = {
+    enable = true;
+  };
 
   programs.zsh = {
     enable = true;
