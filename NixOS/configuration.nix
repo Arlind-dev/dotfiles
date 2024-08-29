@@ -66,6 +66,8 @@
 
   environment.variables.EDITOR = "nvim";
 
+  virtualisation.containers.enable = true;
+
   virtualisation.docker = {
     enable = true;
     rootless = {
@@ -76,6 +78,7 @@
 
   virtualisation.podman = {
     enable = true;
+    defaultNetwork.settings.dns_enabled = true;
   };
 
   programs.zsh = {
