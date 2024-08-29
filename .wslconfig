@@ -1,0 +1,3 @@
+[wsl2]
+localhostForwarding=true
+kernelCommandLine = cgroup_no_v1=all
