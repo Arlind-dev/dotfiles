@@ -28,7 +28,6 @@
     home = "/home/nixos";
     shell = pkgs.zsh;
     extraGroups = [ "docker" ];
-    initialHashedPassword = "$y$j9T$SjzV54a2Dt6SD6kL9E4tn/$3tFQ4kBfJBSDELii/8QHzraCAqoiINNljzZcD7m4AS3"; # nixos
   };
 
   users.users.root = {
@@ -113,7 +112,7 @@
 
   services.xrdp = {
     enable = true;
-    port = 3389;
+    port = 3390;
     defaultWindowManager = "startplasma-x11";
     openFirewall = true;
   };

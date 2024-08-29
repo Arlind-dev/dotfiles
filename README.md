@@ -77,4 +77,27 @@ To import your NixOS configuration, follow these steps:
    sudo nixos-rebuild switch
    ```
 
+4. **Reboot WSL**
+
+   ```Bash
+   exit
+   ```
+
+   ```PowerShell
+   wsl -d NixOS --shutdown
+   wsl -d NixOS
+   ```
+
+5. **Reapply config**
+
+   ```Bash
+   sudo nixos-rebuild switch
+   ```
+
+6. **Set Password for use nixos**
+
+   ```Bash
+   sudo passwd nixos
+   ```
+
 By following these instructions, you should have NixOS running smoothly on both your VMs and WSL, with your configurations properly applied.
