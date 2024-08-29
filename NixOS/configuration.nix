@@ -28,7 +28,7 @@
 
   users.users.nixos = {
     isNormalUser = true;
-    home = "/mnt/wsl/home";
+    home = "/mnt/wsl/home"; # shared home directory
     shell = pkgs.zsh;
     extraGroups = [ "docker" ];
   };
@@ -86,6 +86,10 @@
     enable = true;
   };
 
+  programs.nano = {
+    enable = false;
+  };
+
   programs.neovim = {
     enable = true;
     defaultEditor = true;
@@ -130,6 +134,21 @@
         if [ ! -d /mnt/wsl/home ]; then \
           mkdir -p /mnt/wsl/home && \
           chown nixos:nixos /mnt/wsl/home; \
+        fi''";
+      Type = "oneshot";
+      RemainAfterExit = false;
+    };
+  };
+
+  systemd.services.deleteHomeDir = {
+    description = "Delete /home/nixos directory if it exists";
+    after = [ "local-fs.target" ];
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      ExecStart = "${pkgs.bash}/bin/bash -c ''\
+        if [ -d /home/nixos ]; then \
+          rm -rf /home/nixos; \
         fi''";
       Type = "oneshot";
       RemainAfterExit = false;

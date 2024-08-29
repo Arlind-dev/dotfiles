@@ -94,7 +94,7 @@ To import your NixOS configuration, follow these steps:
    sudo nixos-rebuild switch
    ```
 
-6. **Set Password for use nixos**
+6. **Set Password for use nixos (so RDP works)**
 
    ```Bash
    sudo passwd nixos
