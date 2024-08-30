@@ -9,7 +9,7 @@
   networking.firewall = {
     enable = true;
     allowedTCPPorts = [ 22 80 443 3390 6443 ];
-    allowedUDPPorts = [ ]
+    allowedUDPPorts = [ ];
   };
 
   system.stateVersion = "24.11";
