@@ -8,7 +8,8 @@
 
   networking.firewall = {
     enable = true;
-    allowedTCPPorts = [ 22 80 443 3390 ];
+    allowedTCPPorts = [ 22 80 443 3390 6443 ];
+    allowedUDPPorts = [ ]
   };
 
   system.stateVersion = "24.11";
@@ -112,6 +113,9 @@
     viAlias = true;
     vimAlias = true;
   };
+
+  services.k3s.enable = true;
+  services.k3s.role = "server";
 
   services.openssh = {
     enable = true;
