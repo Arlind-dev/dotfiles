@@ -1,5 +1,20 @@
 { config, pkgs, ... }:
 
+let
+  my-kubernetes-helm = with pkgs; wrapHelm kubernetes-helm {
+    plugins = with pkgs.kubernetes-helmPlugins; [
+      helm-secrets
+      helm-diff
+      helm-s3
+      helm-git
+    ];
+  };
+
+  my-helmfile = pkgs.helmfile-wrapped.override {
+    inherit (my-kubernetes-helm) pluginsDir;
+  };
+in
+
 {
   imports = [
     <nixos-wsl/modules>
@@ -63,6 +78,8 @@
     docker-compose
     podman-compose
     podman-tui
+    my-kubernetes-helm
+    my-helmfile
   ];
 
   environment.variables.EDITOR = "nvim";
@@ -87,6 +104,11 @@
     enableCompletion = true;
     autosuggestions.enable = true;
     syntaxHighlighting.enable = true;
+    shellAliases = {
+      "d" = "docker $*";
+      "d-c" = "docker compose $*";
+      "update" = "sudo nixos-rebuild switch";
+    };
     ohMyZsh = {
       enable = true;
       plugins = [ "git"];
@@ -114,8 +136,13 @@
     vimAlias = true;
   };
 
-  services.k3s.enable = true;
-  services.k3s.role = "server";
+  services.k3s = {
+    enable = true;
+    role = "server";
+    extraFlags = [
+      "--write-kubeconfig-mode=644"
+    ];
+  };
 
   services.openssh = {
     enable = true;
