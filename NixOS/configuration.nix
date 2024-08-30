@@ -21,13 +21,22 @@ in
     <home-manager/nixos>
   ];
 
+  boot.kernelPackages = pkgs.linuxPackages_hardened;
+  boot.kernel.sysctl = {
+    "kernel.dmesg_restrict" = 1;
+    "kernel.kptr_restrict" = 2;
+    "kernel.unprivileged_bpf_disabled" = 1;
+  };
+
   networking.firewall = {
     enable = true;
-    allowedTCPPorts = [ 22 3390 6443 ];
+    allowedTCPPorts = [ 2222 3390 6443 ];
     allowedUDPPorts = [ ];
   };
 
   system.stateVersion = "24.11";
+
+  system.autoUpgrade.enable = true;
 
   wsl.enable = true;
   wsl.defaultUser = "nixos";
@@ -150,13 +159,17 @@ in
 
   services.openssh = {
     enable = true;
-    ports = [ 22 ];
+    ports = [ 2222 ];
     settings = {
       PasswordAuthentication = true;
       UseDns = true;
       X11Forwarding = true;
       PermitRootLogin = "no";
     };
+  };
+
+  services.logrotate = {
+    enable = true;
   };
 
   services.xserver = {
