@@ -21,29 +21,14 @@ in
     <home-manager/nixos>
   ];
 
+  system.stateVersion = "24.11";
+
   boot.kernelPackages = pkgs.linuxPackages_hardened;
   boot.kernel.sysctl = {
     "kernel.dmesg_restrict" = 1;
     "kernel.kptr_restrict" = 2;
     "kernel.unprivileged_bpf_disabled" = 1;
   };
-
-  networking.firewall = {
-    enable = true;
-    allowedTCPPorts = [ 2222 3390 6443 ];
-    allowedUDPPorts = [ ];
-  };
-
-  system.stateVersion = "24.11";
-
-  system.autoUpgrade.enable = true;
-
-  wsl.enable = true;
-  wsl.defaultUser = "nixos";
-
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  nix.gc.automatic = true;
-  nix.gc.dates = "daily";
 
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings = {
@@ -97,6 +82,21 @@ in
     KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
   };
 
+  system.autoUpgrade.enable = true;
+
+  wsl.enable = true;
+  wsl.defaultUser = "nixos";
+
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.gc.automatic = true;
+  nix.gc.dates = "daily";
+
+  networking.firewall = {
+    enable = true;
+    allowedTCPPorts = [ 2222 3390 6443 ];
+    allowedUDPPorts = [];
+  };
+
   virtualisation.containers.enable = true;
 
   virtualisation.docker = {
@@ -110,43 +110,6 @@ in
   virtualisation.podman = {
     enable = true;
     defaultNetwork.settings.dns_enabled = true;
-  };
-
-  programs.zsh = {
-    enable = true;
-    enableCompletion = true;
-    autosuggestions.enable = true;
-    syntaxHighlighting.enable = true;
-    shellAliases = {
-      "d" = "docker $*";
-      "d-c" = "docker compose $*";
-      "update" = "sudo nixos-rebuild switch";
-    };
-    ohMyZsh = {
-      enable = true;
-      plugins = [ "git"];
-      theme = "alanpeabody";
-    };
-  };
-
-  programs.tmux = {
-    enable = true;
-    clock24 = true;
-  };
-
-  programs.git = {
-    enable = true;
-  };
-
-  programs.nano = {
-    enable = false;
-  };
-
-  programs.neovim = {
-    enable = true;
-    defaultEditor = true;
-    viAlias = true;
-    vimAlias = true;
   };
 
   services.k3s = {
@@ -186,6 +149,43 @@ in
     port = 3390;
     defaultWindowManager = "startplasma-x11";
     openFirewall = true;
+  };
+
+  programs.zsh = {
+    enable = true;
+    enableCompletion = true;
+    autosuggestions.enable = true;
+    syntaxHighlighting.enable = true;
+    shellAliases = {
+      "d" = "docker $*";
+      "d-c" = "docker compose $*";
+      "update" = "sudo nixos-rebuild switch";
+    };
+    ohMyZsh = {
+      enable = true;
+      plugins = [ "git" ];
+      theme = "alanpeabody";
+    };
+  };
+
+  programs.tmux = {
+    enable = true;
+    clock24 = true;
+  };
+
+  programs.git = {
+    enable = true;
+  };
+
+  programs.nano = {
+    enable = false;
+  };
+
+  programs.neovim = {
+    enable = true;
+    defaultEditor = true;
+    viAlias = true;
+    vimAlias = true;
   };
 
   home-manager.users.nixos = {
