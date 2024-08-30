@@ -80,9 +80,13 @@ in
     podman-tui
     my-kubernetes-helm
     my-helmfile
+    firefox
   ];
 
-  environment.variables.EDITOR = "nvim";
+  environment.variables = {
+    EDITOR = "nvim";
+    KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
+  };
 
   virtualisation.containers.enable = true;
 
@@ -140,7 +144,7 @@ in
     enable = true;
     role = "server";
     extraFlags = [
-      "--write-kubeconfig-mode=644"
+      "--write-kubeconfig-mode=0644"
     ];
   };
 
