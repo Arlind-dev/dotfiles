@@ -11,6 +11,7 @@ Create or modify the `~/.wslconfig` file in Windows with the following content:
 ```ini
 [wsl2]
 localhostForwarding=true
+nestedVirtualization=true
 kernelCommandLine = cgroup_no_v1=all
 ```
 
