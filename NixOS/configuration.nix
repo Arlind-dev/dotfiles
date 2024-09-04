@@ -76,6 +76,11 @@ in
     firefox
   ];
 
+  programs.nix-ld = {
+    enable = true;
+    package = nix-ld-rs;
+  };
+
   environment.variables = {
     EDITOR = "nvim";
     KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
