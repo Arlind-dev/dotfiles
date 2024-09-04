@@ -16,11 +16,6 @@ let
 in
 
 {
-  imports = [
-    <nixos-wsl/modules>
-    <home-manager/nixos>
-  ];
-
   system.stateVersion = "24.11";
 
   boot.kernelPackages = pkgs.linuxPackages_hardened;
