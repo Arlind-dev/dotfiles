@@ -78,7 +78,6 @@ in
 
   programs.nix-ld = {
     enable = true;
-    package = nix-ld-rs;
   };
 
   environment.variables = {
@@ -88,8 +87,11 @@ in
 
   system.autoUpgrade.enable = true;
 
-  wsl.enable = true;
-  wsl.defaultUser = "nixos";
+   wsl = {
+    enable = true;
+    defaultUser = "nixos";
+    nativeSystemd = true;
+   };
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   nix.gc.automatic = true;
