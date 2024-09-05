@@ -165,8 +165,9 @@ in
     shellAliases = {
       "d" = "docker $*";
       "d-c" = "docker compose $*";
-      "rebuild" = 'sudo nixos-rebuild switch --flake "/etc/nixos/"';
-      "update" = 'nix flake update "/etc/nixos/"';
+      "rebuild" = "sudo nixos-rebuild switch --flake ~/.dotfiles/nix";
+      "update" = "nix flake update ~/.dotfiles/nix";
+      "clean" = "nix-collect-garbage -d";
     };
     ohMyZsh = {
       enable = true;
@@ -182,10 +183,6 @@ in
 
   programs.git = {
     enable = true;
-  };
-
-  programs.nano = {
-    enable = false;
   };
 
   programs.neovim = {
