@@ -16,7 +16,7 @@ let
 in
 
 {
-  system.stateVersion = "24.11";
+  system.stateVersion = "24.05";
 
   boot.kernelPackages = pkgs.linuxPackages_hardened;
   boot.kernel.sysctl = {
@@ -165,7 +165,8 @@ in
     shellAliases = {
       "d" = "docker $*";
       "d-c" = "docker compose $*";
-      "update" = "sudo nixos-rebuild switch";
+      "rebuild" = 'sudo nixos-rebuild switch --flake "/etc/nixos/"';
+      "update" = 'nix flake update "/etc/nixos/"';
     };
     ohMyZsh = {
       enable = true;
@@ -195,10 +196,10 @@ in
   };
 
   home-manager.users.nixos = {
-    home.stateVersion = "24.11";
+    home.stateVersion = "24.05";
   };
 
   home-manager.users.root = {
-    home.stateVersion = "24.11";
+    home.stateVersion = "24.05";
   };
 }
