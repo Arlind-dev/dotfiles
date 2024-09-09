@@ -1,28 +1,23 @@
-$NixOSFolder = "C:/wsl/nixos"
-$NixOSImage = "$NixOSFolder/nixos-wsl.tar.gz"
-$VHDXPath = "$NixOSFolder/home.vhdx"
+$NixOSFolder = "C:\wsl\nixos"
+$NixOSImage = "$NixOSFolder\nixos-wsl.tar.gz"
+$VHDXPath = "$NixOSFolder\home.vhdx"
 $RepoURL = "https://github.com/Arlind-dev/dotfiles"
-$RepoPath = "$NixOSFolder/dotfiles"
-$SymlinkPath = "$RepoPath/Windows/setup-wsl.ps1"
-$SymlinkTarget = "$NixOSFolder/setup-wsl.ps1"
+$RepoPath = "$NixOSFolder\dotfiles"
+$NixFilesSource = "/mnt/c/wsl/nixos/dotfiles/NixOS"
+$NixFilesDest = "/home/nixos/.dotfiles/nix"
 
 $wslCheck = wsl.exe --version 2>$null
 
 if (-Not $wslCheck) {
-    Write-Host "WSL is not installed. Installing WSL..."
     wsl.exe --install --no-distribution
-} else {
-    Write-Host "WSL is already installed."
 }
 
 $wslInstances = wsl.exe -l -q
 if ($wslInstances -contains "NixOS") {
-    Write-Host "Unregistering existing NixOS instance..."
     wsl.exe --unregister NixOS
 }
 
 if (-Not (Test-Path -Path $NixOSImage)) {
-    Write-Host "NixOS image not found. Downloading..."
     if (-Not (Test-Path -Path $NixOSFolder)) {
         New-Item -Path $NixOSFolder -ItemType Directory
     }
@@ -30,30 +25,41 @@ if (-Not (Test-Path -Path $NixOSImage)) {
 }
 
 if (-Not (Test-Path -Path $RepoPath)) {
-    Write-Host "Cloning the repository into $RepoPath..."
     git clone $RepoURL $RepoPath
 } else {
-    Write-Host "Repository already exists. Pulling latest changes..."
     Set-Location -Path $RepoPath
     git pull
 }
 
-Write-Host "Importing NixOS into WSL..."
-wsl.exe --import NixOS $NixOSFolder $NixOSImage
+wsl.exe --import NixOS "$NixOSFolder" "$NixOSImage"
 
-Write-Host "Setting NixOS as default WSL instance..."
 wsl.exe -s NixOS
 
 if (-Not (Test-Path -Path $VHDXPath)) {
-    Write-Host "Creating VHDX file..."
     New-VHD -Path $VHDXPath -SizeBytes 20GB -Dynamic
 
     $formatDisk = "sudo mkfs.ext4 /mnt/c/wsl/nixos/home.vhdx"
-
-    Write-Host "Formatting VHDX as ext4 inside NixOS..."
     wsl.exe -d NixOS -- bash -c $formatDisk
-} else {
-    Write-Host "VHDX already exists, skipping creation."
 }
 
-Write-Host "Setup completed."
+$filesExistCommand = "if [ -n '$(ls -A $NixFilesDest)' ]; then echo 'exists'; else echo 'not_exists'; fi"
+$filesExist = wsl.exe -d NixOS -- bash -c $filesExistCommand
+
+if ($filesExist -eq "exists") {
+    $userInput = Read-Host "Files already exist in $NixFilesDest. Do you want to replace them? (yes/no)"
+    if ($userInput -ne "yes") {
+        Write-Host "Skipping file replacement."
+    } else {
+        Write-Host "Replacing existing files in $NixFilesDest..."
+        wsl.exe -d NixOS -- bash -c "rm -rf $NixFilesDest/* && cp -r $NixFilesSource/* $NixFilesDest"
+    }
+} else {
+    Write-Host "Copying NixOS configuration files to $NixFilesDest..."
+    wsl.exe -d NixOS -- bash -c "cp -r $NixFilesSource/* $NixFilesDest"
+}
+
+wsl.exe -d NixOS -- bash -c "sudo nixos-rebuild switch --flake ~/.dotfiles/nix"
+
+wsl.exe --shutdown
+
+wsl.exe -d NixOS -- bash -c "sudo nixos-rebuild switch --flake ~/.dotfiles/nix"
