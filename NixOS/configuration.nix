@@ -25,6 +25,12 @@ in
     "kernel.unprivileged_bpf_disabled" = 1;
   };
 
+  fileSystems."/home/nixos" = {
+    device = "/mnt/c/wsl/home.ext4";
+    fsType = "ext4";
+    options = [ "defaults" ];
+  };
+
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings = {
     LANG = "en_US.UTF-8";
