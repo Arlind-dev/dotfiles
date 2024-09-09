@@ -50,6 +50,10 @@ wsl.exe -d NixOS -- bash -c "cp -r $NixFilesSource/* $NixFilesDest"
 Write-Host "Rebuild with flake in progress, this may take a few minutes...."
 wsl.exe -d NixOS -- bash -c "sudo nixos-rebuild switch --flake ~/.dotfiles/nix"
 
+wsl.exe -d NixOS -- bash -c "sudo chown 1000:100 /home/nixos"
+wsl.exe -d NixOS -- bash -c "mkdir -p $NixFilesDest"
+wsl.exe -d NixOS -- bash -c "cp -r $NixFilesSource/* $NixFilesDest"
+
 wsl.exe --shutdown
 
 wsl.exe -d NixOS -- bash -c "sudo nixos-rebuild switch --flake ~/.dotfiles/nix"
