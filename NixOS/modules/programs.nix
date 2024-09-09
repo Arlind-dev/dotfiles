@@ -16,8 +16,8 @@ in
     shellAliases = {
       "d" = "docker $*";
       "d-c" = "docker compose $*";
-      "rebuild" = "sudo nixos-rebuild switch --flake ~/.dotfiles/nix";
-      "update" = "nix flake update ~/.dotfiles/nix";
+      "rebuild" = "sudo nixos-rebuild switch --flake /etc/nixos/";
+      "update" = "nix flake update /etc/nixos/";
       "clean" = "nix-collect-garbage -d";
     };
     ohMyZsh = {
