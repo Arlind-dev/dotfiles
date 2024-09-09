@@ -3,6 +3,8 @@ $NixOSImage = "$NixOSFolder/nixos-wsl.tar.gz"
 $VHDXPath = "$NixOSFolder/home.vhdx"
 $RepoURL = "https://github.com/Arlind-dev/dotfiles"
 $RepoPath = "$NixOSFolder/dotfiles"
+$SymlinkPath = "$RepoPath/Windows/setup-wsl.ps1"
+$SymlinkTarget = "$NixOSFolder/setup-wsl.ps1"
 
 $wslCheck = wsl.exe --version 2>$null
 
@@ -34,6 +36,13 @@ if (-Not (Test-Path -Path $RepoPath)) {
     Write-Host "Repository already exists. Pulling latest changes..."
     Set-Location -Path $RepoPath
     git pull
+}
+
+if (-Not (Test-Path -Path $SymlinkPath)) {
+    Write-Host "Creating symbolic link for setup-wsl.ps1..."
+    New-Item -Path $SymlinkPath -ItemType SymbolicLink -Value $SymlinkTarget
+} else {
+    Write-Host "Symbolic link for setup-wsl.ps1 already exists."
 }
 
 Write-Host "Importing NixOS into WSL..."
