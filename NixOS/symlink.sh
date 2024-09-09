@@ -5,7 +5,7 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-SOURCE_DIR="$HOME/.dotfiles/nix/NixOS"
+SOURCE_DIR="/home/nixos/.dotfiles/nix/NixOS"
 TARGET_DIR="/etc/nixos"
 
 mkdir -p $TARGET_DIR

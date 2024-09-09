@@ -199,7 +199,8 @@ try {
     wsl.exe -d NixOS -- bash -c "rm -rf ~/.dotfiles/nix"
     wsl.exe -d NixOS -- bash -c "git clone https://github.com/Arlind-dev/dotfiles ~/.dotfiles/nix/"
     Write-OutputLog "Creating Symlinks"
-    wsl.exe -d NixOS -- bash -c "sudo ~/.dotfiles/nix/NixOS/symlink.sh"
+    wsl.exe -d NixOS -- bash -c "chmod +x /home/nixos/.dotfiles/nix/NixOS/symlink.sh"
+    wsl.exe -d NixOS -- bash -c "sudo /home/nixos/.dotfiles/nix/NixOS/symlink.sh"
 } catch {
     Write-OutputLog "Failed during final setup steps."
     Exit 1
