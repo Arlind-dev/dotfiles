@@ -63,4 +63,4 @@ if (-Not (Test-Path -Path $VHDXPath)) {
     Write-Host "VHDX already exists, skipping creation."
 }
 
-Write-Host "VHDX file formatted to ext4."
+Write-Host "Setup completed."
