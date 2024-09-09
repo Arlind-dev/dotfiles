@@ -127,7 +127,6 @@ try {
     Exit 1
 }
 
-# Rebuild NixOS using flake
 try {
     Write-Host "Rebuild with flake in progress, this may take a few minutes...."
     wsl.exe -d NixOS -- bash -c "sudo nixos-rebuild switch --flake ~/.dotfiles/nix"
