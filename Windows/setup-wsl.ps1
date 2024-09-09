@@ -194,10 +194,10 @@ try {
     wsl.exe -d NixOS -- bash -c "cp -r $NixFilesSource/* $NixFilesDest"
     Write-OutputLog "Re-copied configuration files."
     wsl.exe -d NixOS -- bash -c "sudo nixos-rebuild switch --flake ~/.dotfiles/nix"
-    Write-OutputLog "Final rebuild with flake completed."
     Write-OutputLog "Replacing nix files with git repository..."
     wsl.exe -d NixOS -- bash -c "rm -rf ~/.dotfiles/nix"
     wsl.exe -d NixOS -- bash -c "git clone https://github.com/Arlind-dev/dotfiles ~/.dotfiles/nix/"
+    wsl.exe -d NixOS -- zsh -c "rebuild"
 } catch {
     Write-OutputLog "Failed during final setup steps."
     Exit 1
