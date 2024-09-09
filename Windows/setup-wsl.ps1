@@ -42,24 +42,16 @@ if (-Not (Test-Path -Path $VHDXPath)) {
     wsl.exe -d NixOS -- bash -c $formatDisk
 }
 
-$filesExistCommand = "if [ -n '$(ls -A $NixFilesDest)' ]; then echo 'exists'; else echo 'not_exists'; fi"
-$filesExist = wsl.exe -d NixOS -- bash -c $filesExistCommand
+Write-Host "Copying NixOS configuration files to $NixFilesDest..."
+wsl.exe -d NixOS -- bash -c "mkdir -p $NixFilesDest"
+wsl.exe -d NixOS -- bash -c "cp -r $NixFilesSource/* $NixFilesDest"
 
-if ($filesExist -eq "exists") {
-    $userInput = Read-Host "Files already exist in $NixFilesDest. Do you want to replace them? (yes/no)"
-    if ($userInput -ne "yes") {
-        Write-Host "Skipping file replacement."
-    } else {
-        Write-Host "Replacing existing files in $NixFilesDest..."
-        wsl.exe -d NixOS -- bash -c "rm -rf $NixFilesDest/* && cp -r $NixFilesSource/* $NixFilesDest"
-    }
-} else {
-    Write-Host "Copying NixOS configuration files to $NixFilesDest..."
-    wsl.exe -d NixOS -- bash -c "cp -r $NixFilesSource/* $NixFilesDest"
-}
 
+Write-Host "Rebuild with flake in progress, this may take a few minutes...."
 wsl.exe -d NixOS -- bash -c "sudo nixos-rebuild switch --flake ~/.dotfiles/nix"
 
 wsl.exe --shutdown
 
 wsl.exe -d NixOS -- bash -c "sudo nixos-rebuild switch --flake ~/.dotfiles/nix"
+
+Write-Host "Setup complete."
