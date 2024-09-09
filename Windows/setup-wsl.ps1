@@ -190,6 +190,7 @@ try {
 try {
     wsl.exe -d NixOS -- bash -c "sudo chown -R 1000:100 /home/nixos"
     Write-OutputLog "Changed ownership of home directory."
+    wsl.exe -d NixOS -- bash -c "echo 'nixos:nixos' | sudo chpasswd" # for xrdp
     wsl.exe -d NixOS -- bash -c "rm /home/nixos/.local/state/nix/profiles/home-manager*"
     wsl.exe -d NixOS -- bash -c "rm /home/nixos/.local/state/home-manager/gcroots/current-home"
     wsl.exe -d NixOS -- bash -c "mkdir -p $NixFilesDest"
