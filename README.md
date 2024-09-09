@@ -19,35 +19,15 @@ kernelCommandLine = cgroup_no_v1=all
 
 ### Installing NixOS on WSL
 
-1. **Enable WSL:**
+1. **Install WSL**
 
    Open PowerShell and run:
 
    ```PowerShell
-   wsl --install --no-distribution
+   Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Arlind-dev/dotfiles/main/Windows/setup-wsl.ps1").Content
    ```
 
-2. **Download the NixOS WSL Tarball:**
-
-   Get the latest `nixos-wsl.tar.gz` from the [latest release](https://github.com/nix-community/NixOS-WSL/releases/latest).
-
-3. **Import NixOS into WSL:**
-
-   In PowerShell, execute:
-
-   ```PowerShell
-   wsl --import NixOS --version 2 $env:USERPROFILE\NixOS\ nixos-wsl.tar.gz
-   ```
-
-4. **Set NixOS as the Default Distribution:**
-
-   Run:
-
-   ```PowerShell
-   wsl -s NixOS
-   ```
-
-5. **Launch WSL:**
+2. **Launch WSL:**
 
    Simply type:
 
