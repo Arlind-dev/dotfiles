@@ -11,6 +11,7 @@ $NixFilesDest = "/home/nixos/.dotfiles/nix"
 $HomePath = $env:USERPROFILE
 $WSLConfigPath = "$HomePath\.wslconfig"
 $WSLConfigBackupPath = "$HomePath\.wslconfigcopy"
+$VHDXSizeGB = 5GB # Set to "Dynamic" or "Fixed"
 
 function Write-OutputLog {
     param (
@@ -150,7 +151,7 @@ try {
 
 if (-Not (Test-Path -Path $VHDXPath)) {
     try {
-        New-VHD -Path $VHDXPath -SizeBytes 20GB -Dynamic
+        New-VHD -Path $VHDXPath -SizeBytes $VHDXSizeGB -Fixed
         $formatDisk = "sudo mkfs.ext4 /mnt/c/wsl/nixos/home.vhdx"
         wsl.exe -d NixOS -- bash -c $formatDisk
         Write-OutputLog "Created and formatted VHD for home directory."
