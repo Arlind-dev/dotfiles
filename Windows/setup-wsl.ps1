@@ -38,13 +38,6 @@ if (-Not (Test-Path -Path $RepoPath)) {
     git pull
 }
 
-if (-Not (Test-Path -Path $SymlinkPath)) {
-    Write-Host "Creating symbolic link for setup-wsl.ps1..."
-    New-Item -Path $SymlinkPath -ItemType SymbolicLink -Value $SymlinkTarget
-} else {
-    Write-Host "Symbolic link for setup-wsl.ps1 already exists."
-}
-
 Write-Host "Importing NixOS into WSL..."
 wsl.exe --import NixOS $NixOSFolder $NixOSImage
 
