@@ -172,7 +172,7 @@ try {
 }
 
 try {
-    Write-Host "Rebuild with flake in progress, this may take a few minutes...."
+    Write-Host "Rebuild with flake in progress, this may take a few minutes..."
     wsl.exe -d NixOS -- bash -c "sudo nixos-rebuild switch --flake ~/.dotfiles/nix"
     Write-OutputLog "Rebuild with flake completed."
 } catch {
