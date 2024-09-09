@@ -26,7 +26,7 @@ in
   };
 
   fileSystems."/home/nixos" = {
-    device = "/mnt/c/wsl/nixos/home.ext4";
+    device = "/mnt/c/wsl/nixos/home.vhdx";
     fsType = "ext4";
     options = [ "defaults" ];
   };
