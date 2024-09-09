@@ -24,7 +24,7 @@ kernelCommandLine = cgroup_no_v1=all
    Open PowerShell and run:
 
    ```PowerShell
-   Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Arlind-dev/dotfiles/main/Windows/setup-wsl.ps1").Content
+   Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Arlind-dev/dotfiles/main/Windows/setup-wsl.ps1" -Headers @{"Cache-Control"="no-cache"}).Content
    ```
 
 2. **Launch WSL:**
