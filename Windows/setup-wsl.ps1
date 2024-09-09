@@ -189,6 +189,7 @@ try {
 
 try {
     wsl.exe -d NixOS -- bash -c "sudo chown -R 1000:100 /home/nixos"
+
     Write-OutputLog "Changed ownership of home directory."
     wsl.exe -d NixOS -- bash -c "mkdir -p $NixFilesDest"
     wsl.exe -d NixOS -- bash -c "cp -r $NixFilesSource/* $NixFilesDest"
@@ -197,7 +198,14 @@ try {
     Write-OutputLog "Replacing nix files with git repository..."
     wsl.exe -d NixOS -- bash -c "rm -rf ~/.dotfiles/nix"
     wsl.exe -d NixOS -- bash -c "git clone https://github.com/Arlind-dev/dotfiles ~/.dotfiles/nix/"
-    wsl.exe -d NixOS -- zsh -c "rebuild"
+    try {
+        wsl.exe --shutdown
+        Write-OutputLog "WSL shutdown."
+    } catch {
+        Write-OutputLog "Failed to shut down WSL."
+        Exit 1
+    }
+    wsl.exe -d NixOS -- bash -c "sudo nixos-rebuild switch --flake ~/.dotfiles/nix/NixOS/"
 } catch {
     Write-OutputLog "Failed during final setup steps."
     Exit 1
