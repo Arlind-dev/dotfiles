@@ -11,7 +11,7 @@ $NixFilesDest = "/home/nixos/.dotfiles/nix"
 $HomePath = $env:USERPROFILE
 $WSLConfigPath = "$HomePath\.wslconfig"
 $WSLConfigBackupPath = "$HomePath\.wslconfigcopy"
-$VHDXSizeGB = 5GB # Set to "Dynamic" or "Fixed"
+$VHDXSizeGB = 5GB
 
 function Write-OutputLog {
     param (
