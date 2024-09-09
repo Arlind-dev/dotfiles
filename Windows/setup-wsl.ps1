@@ -180,6 +180,7 @@ try {
 }
 
 try {
+    Write-Host "Shutting down WSL..."
     wsl.exe --shutdown
     Write-OutputLog "WSL shutdown."
 } catch {
@@ -188,21 +189,92 @@ try {
 }
 
 try {
+    Write-Host "Changing ownership of home directory..."
     wsl.exe -d NixOS -- bash -c "sudo chown -R 1000:100 /home/nixos"
     Write-OutputLog "Changed ownership of home directory."
-    wsl.exe -d NixOS -- bash -c "echo 'nixos:nixos' | sudo chpasswd" # for xrdp
-    wsl.exe -d NixOS -- bash -c "rm /home/nixos/.local/state/nix/profiles/home-manager*"
-    wsl.exe -d NixOS -- bash -c "rm /home/nixos/.local/state/home-manager/gcroots/current-home"
-    wsl.exe -d NixOS -- bash -c "mkdir -p $NixFilesDest"
-    wsl.exe -d NixOS -- bash -c "cp -r $NixFilesSource/* $NixFilesDest"
-    Write-OutputLog "Re-copied configuration files."
-    wsl.exe -d NixOS -- bash -c "sudo nixos-rebuild switch --flake ~/.dotfiles/nix"
-    Write-OutputLog "Replacing nix files with git repository..."
-    wsl.exe -d NixOS -- bash -c "rm -rf ~/.dotfiles/nix"
-    wsl.exe -d NixOS -- bash -c "git clone https://github.com/Arlind-dev/dotfiles ~/.dotfiles/nix/"
-    wsl.exe -d NixOS -- bash -c "sudo nixos-rebuild switch --flake ~/.dotfiles/nix/NixOS/"
 } catch {
-    Write-OutputLog "Failed during final setup steps."
+    Write-OutputLog "Failed to change ownership of home directory."
+    Exit 1
+}
+
+try {
+    Write-Host "Setting password for 'nixos' user..."
+    wsl.exe -d NixOS -- bash -c "echo 'nixos:nixos' | sudo chpasswd" # For xrdp
+    Write-OutputLog "Password for 'nixos' user set."
+} catch {
+    Write-OutputLog "Failed to set password for 'nixos' user."
+    Exit 1
+}
+
+try {
+    Write-Host "Removing old home-manager profiles..."
+    wsl.exe -d NixOS -- bash -c "rm /home/nixos/.local/state/nix/profiles/home-manager*"
+    Write-OutputLog "Removed old home-manager profiles."
+} catch {
+    Write-OutputLog "Failed to remove old home-manager profiles."
+    Exit 1
+}
+
+try {
+    Write-Host "Removing old home-manager gcroots..."
+    wsl.exe -d NixOS -- bash -c "rm /home/nixos/.local/state/home-manager/gcroots/current-home"
+    Write-OutputLog "Removed old home-manager gcroots."
+} catch {
+    Write-OutputLog "Failed to remove old home-manager gcroots."
+    Exit 1
+}
+
+try {
+    Write-Host "Creating directory for NixOS configuration files..."
+    wsl.exe -d NixOS -- bash -c "mkdir -p $NixFilesDest"
+    Write-OutputLog "Created directory $NixFilesDest."
+} catch {
+    Write-OutputLog "Failed to create directory $NixFilesDest."
+    Exit 1
+}
+
+try {
+    Write-Host "Copying NixOS configuration files..."
+    wsl.exe -d NixOS -- bash -c "cp -r $NixFilesSource/* $NixFilesDest"
+    Write-OutputLog "Copied NixOS configuration files."
+} catch {
+    Write-OutputLog "Failed to copy NixOS configuration files."
+    Exit 1
+}
+
+try {
+    Write-Host "Rebuilding NixOS with flake configuration..."
+    wsl.exe -d NixOS -- bash -c "sudo nixos-rebuild switch --flake ~/.dotfiles/nix"
+    Write-OutputLog "Rebuild with flake completed."
+} catch {
+    Write-OutputLog "Failed to rebuild NixOS with flake configuration."
+    Exit 1
+}
+
+try {
+    Write-Host "Removing old dotfiles repository..."
+    wsl.exe -d NixOS -- bash -c "rm -rf ~/.dotfiles/nix"
+    Write-OutputLog "Removed old dotfiles repository."
+} catch {
+    Write-OutputLog "Failed to remove old dotfiles repository."
+    Exit 1
+}
+
+try {
+    Write-Host "Cloning new dotfiles repository..."
+    wsl.exe -d NixOS -- bash -c "git clone https://github.com/Arlind-dev/dotfiles ~/.dotfiles/nix/"
+    Write-OutputLog "Cloned new dotfiles repository."
+} catch {
+    Write-OutputLog "Failed to clone new dotfiles repository."
+    Exit 1
+}
+
+try {
+    Write-Host "Rebuilding NixOS with new flake configuration..."
+    wsl.exe -d NixOS -- bash -c "sudo nixos-rebuild switch --flake ~/.dotfiles/nix/NixOS/"
+    Write-OutputLog "Final rebuild with new flake completed."
+} catch {
+    Write-OutputLog "Failed to perform final rebuild with new flake."
     Exit 1
 }
 
