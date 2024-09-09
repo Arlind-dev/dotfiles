@@ -1,5 +1,7 @@
 $NixOSFolder = "C:\wsl\nixos"
-$LogFile = "$NixOSFolder\setup.log"
+$LogsFolder = "$NixOSFolder\logs"
+$CurrentDateTime = (Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
+$LogFile = "$LogsFolder\setup_$CurrentDateTime.log"
 $NixOSImage = "$NixOSFolder\nixos-wsl.tar.gz"
 $VHDXPath = "$NixOSFolder\home.vhdx"
 $RepoURL = "https://github.com/Arlind-dev/dotfiles"
@@ -8,12 +10,12 @@ $NixFilesSource = "/mnt/c/wsl/nixos/dotfiles/NixOS"
 $NixFilesDest = "/home/nixos/.dotfiles/nix"
 
 try {
-    if (-Not (Test-Path -Path $NixOSFolder)) {
-        New-Item -Path $NixOSFolder -ItemType Directory
-        Log-Output "Created folder $NixOSFolder."
+    if (-Not (Test-Path -Path $LogsFolder)) {
+        New-Item -Path $LogsFolder -ItemType Directory
+        Write-Host "Created logs folder at $LogsFolder."
     }
 } catch {
-    Log-Output "Failed to create folder $NixOSFolder."
+    Write-Host "Failed to create logs folder at $LogsFolder."
     Exit 1
 }
 
@@ -125,6 +127,7 @@ try {
     Exit 1
 }
 
+# Rebuild NixOS using flake
 try {
     Write-Host "Rebuild with flake in progress, this may take a few minutes...."
     wsl.exe -d NixOS -- bash -c "sudo nixos-rebuild switch --flake ~/.dotfiles/nix"
