@@ -18,7 +18,7 @@ in
       "d-c" = "docker compose $*";
       "rebuild" = "sudo nixos-rebuild switch --flake ~/.dotfiles/nix/NixOS";
       "update" = "nix flake update ~/.dotfiles/nix/NixOS";
-      "sync-dotfiles" = "git -C ~/.dotfiles/nix pull"
+      "sync-dotfiles" = "git -C ~/.dotfiles/nix pull";
       "clean" = "nix-collect-garbage -d";
     };
     ohMyZsh = {
