@@ -12,7 +12,5 @@ in
 
   environment.systemPackages = lib.optionals enablePodman (with pkgs; [
     podman-compose
-    podman-tui
-    ctop
   ]);
 }
