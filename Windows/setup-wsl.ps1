@@ -27,7 +27,6 @@ function Update-WSLConfig {
     $newConfig = @"
 [wsl2]
 localhostForwarding=true
-nestedVirtualization=true
 kernelCommandLine = cgroup_no_v1=all
 "@
     if (Test-Path -Path $configPath) {
@@ -35,7 +34,6 @@ kernelCommandLine = cgroup_no_v1=all
         $configNeedsUpdate = $false
 
         if (-not ($currentConfig -match 'localhostForwarding=true')) { $configNeedsUpdate = $true }
-        if (-not ($currentConfig -match 'nestedVirtualization=true')) { $configNeedsUpdate = $true }
         if (-not ($currentConfig -match 'kernelCommandLine\s*=\s*cgroup_no_v1=all')) { $configNeedsUpdate = $true }
 
         if ($configNeedsUpdate) {
