@@ -6,7 +6,7 @@ This guide outlines the steps to set up NixOS on Virtual Machines (VMs) and Wind
 
 1. **Install WSL**
 
-   Open PowerShell and run:
+   Open PowerShell as Admin and run:
 
    ```PowerShell
    Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Arlind-dev/dotfiles/main/Windows/setup-wsl.ps1").Content
