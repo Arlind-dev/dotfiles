@@ -39,6 +39,8 @@
 
   system.stateVersion = "24.05";
 
+  nix.nixPath=["nixos-config=/home/nixos/.dotfiles/nix/NixOS/configuration.nix"];
+
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings = {
     LANG = "en_US.UTF-8";
