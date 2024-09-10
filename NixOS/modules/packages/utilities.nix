@@ -13,6 +13,5 @@ in
     wget
     tcpdump
     bat
-    thefuck
   ]);
 }
