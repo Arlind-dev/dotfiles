@@ -2,7 +2,7 @@
 
 This guide outlines the steps to set up NixOS on Windows Subsystem for Linux (WSL), including importing **my NixOS configuration**.
 
-## Installing my NixOS on WSL
+## Installing My NixOS on WSL
 
 1. **Install WSL**
 
@@ -22,23 +22,25 @@ This guide outlines the steps to set up NixOS on Windows Subsystem for Linux (WS
 
 ## Details
 
-### My `setup-wsl.ps1` Script
+### The `setup-wsl.ps1` Script
 
 This script sets up and configures a NixOS environment within WSL2. It performs tasks such as downloading the NixOS image, setting up the disk, cloning **my configuration**, and applying it to the system. Below is an explanation of how the script works and what you need to know.
 
 #### Key Features
 
-- **Everything is set up in** `C:/wsl/nixos/`: The script uses this directory to store all related files including the NixOS image, the VHDX for the home directory, and log files.
+- **Everything is set up in** `C:/wsl/nixos/`: The script uses this directory to store all related files, including the NixOS image, the VHDX for the home directory, and log files.
 - **Creates a 5GB VHDX disk**: The script will create a 5GB VHDX file for storing the home directory and format it appropriately.
 - **Downloads and applies my NixOS configuration**: It clones the repository located at `https://github.com/Arlind-dev/dotfiles` and applies the NixOS configuration defined within it.
 - **Sets a default user password**: It sets the password for the `nixos` user as `nixos`.
-- **Updates my WSL configuration if necessary**: If the required settings (such as `localhostForwarding` and `nestedVirtualization`) are missing in my `.wslconfig`, it will offer to update them.
+- **Updates your WSL configuration if necessary**: If the required settings (`kernelCommandLine = cgroup_no_v1=all`) are missing in your `.wslconfig`, it will offer to update them.
 - **Logs are stored in** `C:/wsl/nixos/logs/`: The script creates detailed logs of its operations, stored with timestamps (e.g., `setup_2024-09-31_hh-mm-ss.log`).
-- **Re-running the script deletes the existing NixOS WSL instance**: If I already have a NixOS WSL instance, the script will unregister it and create a new one from scratch.
+- **Re-running the script deletes the existing NixOS WSL instance**: If you already have a NixOS WSL instance, the script will unregister it and create a new one from scratch.
 
 #### Prerequisites
 
-- **Git and Wget must be installed**: The script will check if these tools are installed. If they are not, it will prompt me to install them before continuing.
+- **Git and Wget must be installed**: The script will check if these tools are installed. If they are not, it will prompt you to install them before continuing.
+- **WSL2 must be installed**: Make sure WSL2 already works and is enabled in Windows 10 or Windows 11.
+- **Enable Virtualization in your BIOS**:
 
 #### Key Configuration Variables
 
@@ -51,15 +53,14 @@ This script sets up and configures a NixOS environment within WSL2. It performs 
 #### What the Script Does
 
 1. **Sets up directories and logs**: Ensures that the necessary folders exist and creates log files for tracking the process.
-2. **Checks prerequisites**: Verifies that Git and Wget are installed. If they aren’t, it exits with a message asking me to install them.
-3. **Installs WSL if necessary**: If WSL isn’t installed, the script will attempt to install it.
-4. **Unregisters any existing NixOS instance**: If NixOS is already registered in WSL, the script will unregister it to ensure a clean setup.
-5. **Downloads the NixOS image**: If the NixOS image is not found in the specified location, it will download it from GitHub.
-6. **Clones the dotfiles repository**: Downloads my configuration from the GitHub repository and applies it to the NixOS instance.
-7. **Creates and formats a VHDX file**: A 5GB disk is created for the home directory and formatted with `ext4`.
-8. **Configures and applies NixOS settings**: The script copies configuration files to the appropriate location and runs `nixos-rebuild switch` using the specified flake.
-9. **Sets up the user password**: Sets the password for the `nixos` user to `nixos`.
-10. **Modifies WSL settings**: If needed, the script will back up my existing `.wslconfig` and update it with required settings.
+2. **Checks prerequisites**: Verifies that Git and Wget are installed. If they aren’t, it exits with a message asking you to install them.
+3. **Unregisters any existing NixOS instance**: If NixOS is already registered in WSL, the script will unregister it to ensure a clean setup.
+4. **Downloads the NixOS image**: If the NixOS image is not found in the specified location, it will download it from GitHub.
+5. **Clones the dotfiles repository**: Downloads my configuration from the GitHub repository and applies it to the NixOS instance.
+6. **Creates and formats a VHDX file**: A 5GB disk is created for the home directory and formatted with `ext4`.
+7. **Configures and applies NixOS settings**: The script copies configuration files to the appropriate location and runs `nixos-rebuild switch` using the specified flake.
+8. **Sets up the user password**: Sets the password for the `nixos` user to `nixos`.
+9. **Modifies WSL settings**: If needed, the script will back up your existing `.wslconfig` and update it with required settings.
 
 #### Logs
 
@@ -70,8 +71,6 @@ This script sets up and configures a NixOS environment within WSL2. It performs 
 
 - If the script is run again, it will delete the existing NixOS WSL instance and create a new one. Any changes made to the previous instance will be lost.
 
-Feel free to modify the template to suit my project’s needs!
-
 ### My NixOS Config
 
 This NixOS configuration is structured with modularity and flexibility in mind, allowing for the easy toggling of key features. The setup is designed to work seamlessly within a WSL2 environment but is adaptable to other NixOS setups as well. Below is a breakdown of the configuration’s features and how to use it.
@@ -79,7 +78,7 @@ This NixOS configuration is structured with modularity and flexibility in mind, 
 #### Key Features
 
 - **Modular Design**: The configuration is split into multiple modules for packages, virtualization, users, and system settings, making it easy to manage and extend.
-- **Toggleable Settings**: Customize my system by enabling or disabling various features through simple flags, such as development tools, virtualization, or desktop environments.
+- **Toggleable Settings**: Customize your system by enabling or disabling various features through simple flags, such as development tools, virtualization, or desktop environments.
 - **WSL2 Specific Settings**: Optimized for use with WSL2, including mounting a 5GB VHDX for the home directory and native systemd support.
 - **Default User and Password**: The default username is `nixos`, and the password is set to `nixos` for easy access.
 
@@ -87,7 +86,7 @@ This NixOS configuration is structured with modularity and flexibility in mind, 
 
 ##### 1. **Virtualization Options**
 
-Managed under `MyNixOS.virtualization`, I can toggle between different virtualization tools:
+Managed under `MyNixOS.virtualization`, you can toggle between different virtualization tools:
 
 - `enableDocker = false`: Enable Docker (with rootless mode) and install `docker-compose` if set to `true`.
 - `enablePodman = false`: Enable Podman and install `podman-compose` and `podman-tui` if set to `true`.
@@ -109,7 +108,7 @@ Managed under `MyNixOS.packages`, with separate flags to control the inclusion o
 A number of useful programs are enabled by default for convenience:
 
 - **Zsh** with Oh My Zsh plugins (`git`) and custom shell aliases like:
-  - `rebuild`: Rebuild NixOS with my configuration.
+  - `rebuild`: Rebuild NixOS.
   - `update`: Update the Nix flake.
   - `sync-dotfiles`: Pull the latest changes from my dotfiles repository.
   - `clean`: Run the Nix garbage collector.
@@ -131,7 +130,7 @@ A number of useful programs are enabled by default for convenience:
 
 #### Usage
 
-I can control which features to enable or disable by modifying the `MyNixOS` settings in my `configuration.nix`. For example:
+You can control which features to enable or disable by modifying the `MyNixOS` settings in your `configuration.nix`. For example:
 
 ```nix
    MyNixOS.virtualization = {
