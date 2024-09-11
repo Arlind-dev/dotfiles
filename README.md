@@ -2,6 +2,26 @@
 
 This guide outlines the steps to set up NixOS on Windows Subsystem for Linux (WSL), including importing **my NixOS configuration**.
 
+## Task List
+
+This project isn't finished, it's currently barely useable, it might be better as soon as these things are done:
+
+### High Priority
+
+- Implement dynamic VHDX allocation for the home directory instead of static 5GB.
+- Update the script to check if the log folder exists before attempting to create log files.
+
+### Medium Priority
+
+- Integrate dotfiles for common tools such as Zsh, Git, Neovim, Tmux, and others.
+- Configure Standalone Home Manager for both the nixos and root user.
+
+### Low Priority
+
+- Resolve the "git is dirty" warning when updating or rebuilding.
+- Refactor scripts to utilize more modular functions.
+- Enhance the script by adding additional validation checks (e.g., virtualization is enabled, WSL2 is configured properly, required packages are installed).
+
 ## Installing My NixOS on WSL
 
 1. **Install WSL**
