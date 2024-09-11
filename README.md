@@ -1,6 +1,6 @@
 # My NixOS Config
 
-This guide outlines the steps to set up NixOS on Virtual Machines (VMs) and Windows Subsystem for Linux (WSL), including importing **my NixOS configuration**.
+This guide outlines the steps to set up NixOS on Windows Subsystem for Linux (WSL), including importing **my NixOS configuration**.
 
 ## Installing my NixOS on WSL
 
