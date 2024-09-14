@@ -11,35 +11,21 @@
     # Users
     ./modules/users/nixos.nix
     ./modules/users/root.nix
-     # Virtualization
+    # Virtualization
     ./modules/virtualization/docker.nix
     ./modules/virtualization/podman.nix
     ./modules/virtualization/k3s.nix
     ./modules/virtualization/helm.nix
-     # General
+    # General
     ./modules/networking.nix
     ./modules/system-services.nix
     ./modules/programs.nix
     ./modules/mynixos-options.nix
+    # MyNixOS specific configurations
+    ./nixos-config.nix
   ];
 
-  MyNixOS.virtualization = {
-    enableDocker = false; #(rootless)
-    enablePodman = false; # Enable either Docker or Podman, I wouldn't enable both / includes docker and docker compose alias
-    enableK3s = false;
-    enableHelm = false; # Enable Helm (can only be true if K3s is enabled)
-  };
-
-  MyNixOS.packages = {
-    enableUtilities = true;
-    enableDatabaseClients = false;
-    enableDevelopmentTools = false;
-    enableDesktopEnvironment = false;
-  };
-
   system.stateVersion = "24.05";
-
-  nix.nixPath=["nixos-config=/home/nixos/.dotfiles/nix/NixOS/configuration.nix"];
 
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings = {
