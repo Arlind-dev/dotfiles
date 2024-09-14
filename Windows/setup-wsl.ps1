@@ -1,43 +1,3 @@
-# Elevation Check and Re-launch with Admin Rights if Necessary
-If (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    Write-Host "Script is not running as administrator. Attempting to restart with elevated privileges..."
-
-    $pwshPath = Get-Command pwsh -ErrorAction SilentlyContinue
-    $shellPath = if ($pwshPath) { "pwsh.exe" } else { "powershell.exe" }
-
-    $wtPath = Get-Command wt -ErrorAction SilentlyContinue
-
-    $ScriptPath = $PSCommandPath
-
-    if (-not $PSCommandPath) {
-        $tempFile = [System.IO.Path]::GetTempFileName()
-
-        $scriptFile = "$tempFile.ps1"
-
-        Rename-Item -Path $tempFile -NewName $scriptFile
-
-        $scriptContent = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Arlind-dev/dotfiles/main/Windows/setup-wsl.ps1").Content
-        Set-Content -Path $scriptFile -Value $scriptContent
-
-        $ScriptPath = $scriptFile
-    }
-
-    if ($wtPath) {
-        Write-Host "Windows Terminal found. Restarting in Windows Terminal with $shellPath..."
-        Start-Process -FilePath "wt.exe" -ArgumentList "new-tab $shellPath -NoProfile -ExecutionPolicy Bypass -File `"$ScriptPath`"" -Verb RunAs
-    }
-    else {
-        Write-Host "Windows Terminal not found. Restarting with $shellPath..."
-        Start-Process -FilePath $shellPath -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptPath`"" -Verb RunAs
-    }
-
-    if (Test-Path $scriptFile) {
-        Remove-Item $scriptFile -Force
-    }
-
-    Exit
-}
-
 # Variable Definitions
 $NixOSFolder = "C:\wsl\nixos"
 $LogsFolder = "$NixOSFolder\logs"
@@ -53,13 +13,9 @@ $HomePath = $env:USERPROFILE
 $WSLConfigPath = "$HomePath\.wslconfig"
 $WSLConfigBackupPath = "$HomePath\.wslconfigcopy"
 $VHDXSizeGB = 5GB
+$ScriptPath = "$NixOSFolder\temp.ps1"
 
 # Function Definitions
-
-function Write-OutputLog {
-    param ([string]$message)
-    Write-Output $message | Out-File -Append $LogFile
-}
 
 function Initialize-LogsFolder {
     try {
@@ -72,6 +28,42 @@ function Initialize-LogsFolder {
         Write-Host "Failed to create logs folder at $LogsFolder."
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
+    }
+}
+
+function Write-OutputLog {
+    param ([string]$message)
+    Write-Output $message | Out-File -Append $LogFile
+}
+
+function Invoke-CheckAdminElevation {
+    if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+        Write-Host "Script is not running as administrator. Attempting to restart with elevated privileges..."
+
+        $pwshPath = Get-Command pwsh -ErrorAction SilentlyContinue
+        $shellPath = if ($pwshPath) { "pwsh.exe" } else { "powershell.exe" }
+
+        $wtPath = Get-Command wt -ErrorAction SilentlyContinue
+
+        if (-not $PSCommandPath) {
+            if (-Not (Test-Path -Path $NixOSFolder)) {
+                New-Item -Path $NixOSFolder -ItemType Directory -Force | Out-Null
+            }
+
+            $scriptContent = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Arlind-dev/dotfiles/main/Windows/setup-wsl.ps1").Content
+            Set-Content -Path $ScriptPath -Value $scriptContent
+        }
+
+        if ($wtPath) {
+            Write-Host "Windows Terminal found. Restarting in Windows Terminal with $shellPath..."
+            Start-Process -FilePath "wt.exe" -ArgumentList "new-tab $shellPath -NoProfile -ExecutionPolicy Bypass -File `"$ScriptPath`"" -Verb RunAs
+        }
+        else {
+            Write-Host "Windows Terminal not found. Restarting with $shellPath..."
+            Start-Process -FilePath $shellPath -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptPath`"" -Verb RunAs
+        }
+
+        Exit
     }
 }
 
@@ -421,6 +413,8 @@ function Invoke-CloneNewDotfilesRepo {
 # Main Execution Flow
 
 Initialize-LogsFolder
+
+Invoke-CheckAdminElevation
 
 $dismOutput = dism.exe /online /get-featureinfo /featurename:Microsoft-Windows-Subsystem-Linux | Select-String "State : (\w+)"
 $wslFeatureState = $dismOutput.Matches[0].Groups[1].Value
