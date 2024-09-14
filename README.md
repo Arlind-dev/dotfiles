@@ -4,7 +4,7 @@ This guide outlines the steps to set up NixOS on Windows Subsystem for Linux (WS
 
 ## Task List
 
-This project isn't finished, it's currently barely useable, it might be better as soon as these things are done:
+This project isn't finished; it's currently barely usable. It might improve as soon as these things are done:
 
 ### High Priority
 
@@ -13,21 +13,23 @@ This project isn't finished, it's currently barely useable, it might be better a
 ### Medium Priority
 
 - Integrate dotfiles for common tools such as Zsh, Git, Neovim, Tmux, and others.
-- Configure Standalone Home Manager for both the nixos and root user.
+- Configure Standalone Home Manager for both the `nixos` and `root` user.
 
 ### Low Priority
 
-- Enhance the script by adding additional validation checks for if virtualization is enabled on your CPU.
+- Enhance the script by adding additional validation checks to see if virtualization is enabled on your CPU.
 
 ## Installing My NixOS on WSL
 
-1. **Install WSL**
+1. **Run the Setup Script**
 
-   Open PowerShell as Admin and run:
+   Open PowerShell and run:
 
    ```PowerShell
    Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Arlind-dev/dotfiles/main/Windows/setup-wsl.ps1").Content
    ```
+
+   The script will check if it is running with administrative privileges and will restart itself with elevated permissions if necessary.
 
 2. **Launch WSL:**
 
@@ -49,15 +51,16 @@ This script sets up and configures a NixOS environment within WSL2. It performs 
 - **Creates a 5GB VHDX disk**: The script will create a 5GB VHDX file for storing the home directory and format it appropriately.
 - **Downloads and applies my NixOS configuration**: It clones the repository located at `https://github.com/Arlind-dev/dotfiles` and applies the NixOS configuration defined within it.
 - **Sets a default user password**: It sets the password for the `nixos` user as `nixos`.
-- **Updates your WSL configuration if necessary**: If the required settings (`kernelCommandLine = cgroup_no_v1=all`) are missing in your `.wslconfig`, it will offer to update them.
-- **Logs are stored in** `C:/wsl/nixos/logs/`: The script creates detailed logs of its operations, stored with timestamps (e.g., `setup_2024-09-31_hh-mm-ss.log`).
+- **Updates your WSL configuration if necessary**: If the required settings (`kernelCommandLine = cgroup_no_v1=all`) are missing in your `.wslconfig`, it will update them.
+- **Logs are stored in** `C:/wsl/nixos/logs/`: The script creates detailed logs of its operations, stored with timestamps (e.g., `setup_2024-09-31_HH-MM-SS.log`).
 - **Re-running the script deletes the existing NixOS WSL instance**: If you already have a NixOS WSL instance, the script will unregister it and create a new one from scratch.
+- **Handles administrative privileges**: The script checks if it is running with administrative privileges and restarts itself with elevated permissions if necessary.
+- **Installs WSL if not present**: The script checks if WSL is installed and will install it if it's not already present on your system.
 
 #### Prerequisites
 
-- **Git and Wget must be installed**: The script will check if these tools are installed. If they are not, it will prompt you to install them before continuing.
-- **WSL2 must be installed**: Make sure WSL2 already works and is enabled in Windows 10 or Windows 11.
-- **Enable Virtualization in your BIOS**:
+- **Git must be installed**: The script will check if Git is installed. If it is not, it will prompt you to install it before continuing.
+- **Enable Virtualization in your BIOS**: Ensure that virtualization is enabled in your BIOS settings to support WSL2.
 
 #### Key Configuration Variables
 
@@ -70,14 +73,20 @@ This script sets up and configures a NixOS environment within WSL2. It performs 
 #### What the Script Does
 
 1. **Sets up directories and logs**: Ensures that the necessary folders exist and creates log files for tracking the process.
-2. **Checks prerequisites**: Verifies that Git and Wget are installed. If they aren’t, it exits with a message asking you to install them.
-3. **Unregisters any existing NixOS instance**: If NixOS is already registered in WSL, the script will unregister it to ensure a clean setup.
-4. **Downloads the NixOS image**: If the NixOS image is not found in the specified location, it will download it from GitHub.
-5. **Clones the dotfiles repository**: Downloads my configuration from the GitHub repository and applies it to the NixOS instance.
-6. **Creates and formats a VHDX file**: A 5GB disk is created for the home directory and formatted with `ext4`.
-7. **Configures and applies NixOS settings**: The script copies configuration files to the appropriate location and runs `nixos-rebuild switch` using the specified flake.
-8. **Sets up the user password**: Sets the password for the `nixos` user to `nixos`.
-9. **Modifies WSL settings**: If needed, the script will back up your existing `.wslconfig` and update it with required settings.
+2. **Checks prerequisites**: Verifies that Git is installed. If it is not, it exits with a message asking you to install it.
+3. **Handles administrative privileges**: Checks if it is running with administrative rights and restarts itself with elevated permissions if necessary.
+4. **Installs WSL if needed**: Checks if WSL is installed, and if not, it installs WSL without any distribution.
+5. **Unregisters any existing NixOS instance**: If NixOS is already registered in WSL, the script will unregister it to ensure a clean setup.
+6. **Downloads the NixOS image**: If the NixOS image is not found in the specified location, it will download it from GitHub.
+7. **Clones the dotfiles repository**: Downloads my configuration from the GitHub repository and applies it to the NixOS instance.
+8. **Imports NixOS into WSL**: Imports the NixOS image into WSL and sets it as the default distribution.
+9. **Creates and formats a VHDX file**: A 5GB disk is created for the home directory and formatted with `ext4`.
+10. **Copies NixOS configuration files**: The script copies configuration files to the appropriate location inside the NixOS instance.
+11. **Configures and applies NixOS settings**: Runs `nixos-rebuild switch` using the specified flake to apply the configuration.
+12. **Sets up the user password**: Sets the password for the `nixos` user to `nixos`.
+13. **Removes old Home Manager profiles and gcroots**: Cleans up any old profiles to avoid conflicts.
+14. **Updates WSL configuration**: Backs up your existing `.wslconfig` and updates it with required settings if necessary.
+15. **Logs**: All operations are logged in `C:/wsl/nixos/logs/` with timestamped log files.
 
 #### Logs
 
@@ -147,7 +156,7 @@ A number of useful programs are enabled by default for convenience:
 
 #### Usage
 
-You can control which features to enable or disable by modifying the `MyNixOS` settings in your `configuration.nix`. For example:
+You can control which features to enable or disable by modifying the `MyNixOS` settings in your `nixos-config.nix` located in `~/.dotfiles/nix/NixOS/`. For example:
 
 ```nix
    MyNixOS.virtualization = {
