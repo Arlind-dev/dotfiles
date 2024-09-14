@@ -10,10 +10,16 @@ If (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     $ScriptPath = $PSCommandPath
 
     if (-not $PSCommandPath) {
-        $tempFile = [System.IO.Path]::ChangeExtension([System.IO.Path]::GetTempFileName(), ".ps1")
+        $tempFile = [System.IO.Path]::GetTempFileName()
+
+        $scriptFile = "$tempFile.ps1"
+
+        Rename-Item -Path $tempFile -NewName $scriptFile
+
         $scriptContent = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Arlind-dev/dotfiles/main/Windows/setup-wsl.ps1").Content
-        Set-Content -Path $tempFile -Value $scriptContent
-        $ScriptPath = $tempFile
+        Set-Content -Path $scriptFile -Value $scriptContent
+
+        $ScriptPath = $scriptFile
     }
 
     if ($wtPath) {
@@ -25,14 +31,12 @@ If (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
         Start-Process -FilePath $shellPath -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptPath`"" -Verb RunAs
     }
 
-    if (Test-Path $tempFile) {
-        Remove-Item $tempFile -Force
+    if (Test-Path $scriptFile) {
+        Remove-Item $scriptFile -Force
     }
 
     Exit
 }
-
-
 
 # Variable Definitions
 $NixOSFolder = "C:\wsl\nixos"
