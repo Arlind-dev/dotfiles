@@ -636,14 +636,6 @@ function main {
         Exit 1
     }
 
-    if (-Not (Get-Command wget -ErrorAction SilentlyContinue)) {
-        $message = "Wget is not installed. Please install Wget before proceeding."
-        Write-Host $message
-        Write-OutputLog $message
-        Read-Host -Prompt "Press Enter to exit"
-        Exit 1
-    }
-
     $message = "Starting NixOS WSL setup..."
     Write-Host $message
     Write-OutputLog $message
