@@ -18,7 +18,6 @@ This project isn't finished, it's currently barely useable, it might be better a
 
 ### Low Priority
 
-- Resolve the "git is dirty" warning when updating or rebuilding.
 - Refactor scripts to utilize more modular functions.
 - Enhance the script by adding additional validation checks (e.g., virtualization is enabled, WSL2 is configured properly, required packages are installed).
 
