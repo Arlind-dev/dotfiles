@@ -10,7 +10,7 @@ If (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     $ScriptPath = $PSCommandPath
 
     if (-not $PSCommandPath) {
-        $tempFile = [System.IO.Path]::GetTempFileName()
+        $tempFile = [System.IO.Path]::ChangeExtension([System.IO.Path]::GetTempFileName(), ".ps1")
         $scriptContent = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Arlind-dev/dotfiles/main/Windows/setup-wsl.ps1").Content
         Set-Content -Path $tempFile -Value $scriptContent
         $ScriptPath = $tempFile
@@ -31,6 +31,7 @@ If (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 
     Exit
 }
+
 
 
 # Variable Definitions
