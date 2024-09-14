@@ -9,7 +9,6 @@ This project isn't finished, it's currently barely useable, it might be better a
 ### High Priority
 
 - Implement dynamic VHDX allocation for the home directory instead of static 5GB.
-- Update the script to check if the log folder exists before attempting to create log files.
 
 ### Medium Priority
 
@@ -18,8 +17,7 @@ This project isn't finished, it's currently barely useable, it might be better a
 
 ### Low Priority
 
-- Refactor scripts to utilize more modular functions.
-- Enhance the script by adding additional validation checks (e.g., virtualization is enabled, WSL2 is configured properly, required packages are installed).
+- Enhance the script by adding additional validation checks for if virtualization is enabled on your CPU.
 
 ## Installing My NixOS on WSL
 
