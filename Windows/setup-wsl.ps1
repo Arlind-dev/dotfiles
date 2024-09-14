@@ -6,16 +6,32 @@ If (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     $shellPath = if ($pwshPath) { "pwsh.exe" } else { "powershell.exe" }
 
     $wtPath = Get-Command wt -ErrorAction SilentlyContinue
+
+    $ScriptPath = $PSCommandPath
+
+    if (-not $PSCommandPath) {
+        $tempFile = [System.IO.Path]::GetTempFileName()
+        $scriptContent = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Arlind-dev/dotfiles/main/Windows/setup-wsl.ps1").Content
+        Set-Content -Path $tempFile -Value $scriptContent
+        $ScriptPath = $tempFile
+    }
+
     if ($wtPath) {
         Write-Host "Windows Terminal found. Restarting in Windows Terminal with $shellPath..."
-        Start-Process -FilePath "wt.exe" -ArgumentList "new-tab $shellPath -NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+        Start-Process -FilePath "wt.exe" -ArgumentList "new-tab $shellPath -NoProfile -ExecutionPolicy Bypass -File `"$ScriptPath`"" -Verb RunAs
     }
     else {
         Write-Host "Windows Terminal not found. Restarting with $shellPath..."
-        Start-Process -FilePath $shellPath -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+        Start-Process -FilePath $shellPath -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptPath`"" -Verb RunAs
     }
+
+    if (Test-Path $tempFile) {
+        Remove-Item $tempFile -Force
+    }
+
     Exit
 }
+
 
 # Variable Definitions
 $NixOSFolder = "C:\wsl\nixos"
