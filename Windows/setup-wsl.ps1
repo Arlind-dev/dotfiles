@@ -17,8 +17,20 @@ function Write-OutputLog {
     param (
         [string]$message
     )
+
+    if (-Not (Test-Path -Path $LogsFolder)) {
+        try {
+            New-Item -Path $LogsFolder -ItemType Directory
+            Write-Host "Created logs folder at $LogsFolder."
+        } catch {
+            Write-Host "Failed to create logs folder at $LogsFolder."
+            Exit 1
+        }
+    }
+
     Write-Output $message | Out-File -Append $LogFile
 }
+
 
 function Update-WSLConfig {
     param (
