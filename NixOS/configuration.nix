@@ -33,7 +33,10 @@
   };
   time.timeZone = "Europe/Zurich";
 
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.extraOptions = ''
+      experimental-features = nix-command flakes
+      warn-dirty = false
+      '';
   nix.gc.automatic = true;
   nix.gc.dates = "daily";
 
