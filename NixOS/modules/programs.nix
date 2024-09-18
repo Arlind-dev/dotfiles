@@ -16,6 +16,7 @@ in
     shellAliases = {
       "d" = "docker $*";
       "d-c" = "docker compose $*";
+      "ff" = "fastfetch";
       "rebuild" = "sudo nixos-rebuild switch --flake ~/.dotfiles/nix/NixOS";
       "update" = "nix flake update ~/.dotfiles/nix/NixOS";
       "sync-dotfiles" = "git -C ~/.dotfiles/nix pull";
