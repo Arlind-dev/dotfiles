@@ -15,5 +15,6 @@ in
     nodejs
     nodePackages.npm
     nodePackages.yarn
+    nodePackages.pnpm
   ]);
 }
