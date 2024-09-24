@@ -14,5 +14,6 @@ in
     python3Packages.pip
     nodejs
     nodePackages.npm
+    nodePackages.yarn
   ]);
 }
