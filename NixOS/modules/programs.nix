@@ -21,6 +21,7 @@ in
       "update" = "nix flake update ~/.dotfiles/nix/NixOS";
       "sync-dotfiles" = "git -C ~/.dotfiles/nix pull";
       "clean" = "nix-collect-garbage -d";
+      "rebuild-all" = "sync-dotfiles && rebuild && update && rebuild && clean";
     };
     ohMyZsh = {
       enable = true;
