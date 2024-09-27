@@ -7,5 +7,4 @@ in
   wsl = {
     docker-desktop.enable = enableDockerDesktop;
   };
-  ]);
 }
