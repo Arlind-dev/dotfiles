@@ -6,10 +6,6 @@ in
 {
   virtualisation.docker = {
     enable = enableDocker;
-    rootless = {
-      enable = enableDocker;
-      setSocketVariable = enableDocker;
-    };
   };
 
   wsl = {
