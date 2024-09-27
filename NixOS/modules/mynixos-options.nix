@@ -63,7 +63,6 @@
 
   config = {
     MyNixOS.virtualization.enableDocker = lib.mkDefault false;
-    MyNixOS.virtualization.enableDockerRootless = lib.mkDefault false;
     MyNixOS.virtualization.enableDockerDesktop = lib.mkDefault false;
     MyNixOS.virtualization.enablePodman = lib.mkDefault false;
     MyNixOS.virtualization.enableK3s = lib.mkDefault false;
