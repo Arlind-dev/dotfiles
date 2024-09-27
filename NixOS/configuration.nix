@@ -13,6 +13,8 @@
     ./modules/users/root.nix
     # Virtualization
     ./modules/virtualization/docker.nix
+    ./modules/virtualization/docker-rootless.nix
+    ./modules/virtualization/docker-desktop.nix
     ./modules/virtualization/podman.nix
     ./modules/virtualization/k3s.nix
     ./modules/virtualization/helm.nix
