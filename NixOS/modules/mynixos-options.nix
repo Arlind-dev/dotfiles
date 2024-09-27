@@ -9,22 +9,34 @@
         description = "Enable Docker support.";
       };
 
+      enableDockerRootless = lib.mkOption {
+        type = lib.types.bool;
+        default = lib.mkDefault false;
+        description = "Enable Docker rootless mode.";
+      };
+
+      enableDockerDesktop = lib.mkOption {
+        type = lib.types.bool;
+        default = lib.mkDefault false;
+        description = "Enable Docker Desktop integration (requires Docker Desktop to be installed).";
+      };
+
       enablePodman = lib.mkOption {
         type = lib.types.bool;
         default = lib.mkDefault false;
-        description = "Enable Podman support.";
+        description = "Enable Podman support. Choose either Docker or Podman to avoid conflicts.";
       };
 
       enableK3s = lib.mkOption {
         type = lib.types.bool;
         default = lib.mkDefault false;
-        description = "Enable K3s support.";
+        description = "Enable K3s (lightweight Kubernetes) support.";
       };
 
       enableHelm = lib.mkOption {
         type = lib.types.bool;
         default = lib.mkDefault false;
-        description = "Enable Helm support (requires K3s).";
+        description = "Enable Helm support (requires K3s to be enabled).";
       };
     };
 
@@ -49,14 +61,16 @@
 
       enableDesktopEnvironment = lib.mkOption {
         type = lib.types.bool;
-        default = false;
-        description = "Whether to enable the desktop environment and related services like Plasma, SDDM, and XRDP.";
+        default = lib.mkDefault false;
+        description = "Enable the desktop environment and related services like Plasma, SDDM, and XRDP.";
       };
     };
   };
 
   config = {
     MyNixOS.virtualization.enableDocker = lib.mkDefault false;
+    MyNixOS.virtualization.enableDockerRootless = lib.mkDefault false;
+    MyNixOS.virtualization.enableDockerDesktop = lib.mkDefault false;
     MyNixOS.virtualization.enablePodman = lib.mkDefault false;
     MyNixOS.virtualization.enableK3s = lib.mkDefault false;
     MyNixOS.virtualization.enableHelm = lib.mkDefault false;
