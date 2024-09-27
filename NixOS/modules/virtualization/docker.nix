@@ -12,6 +12,10 @@ in
     };
   };
 
+  wsl = {
+    docker-desktop.enable = true;
+  };
+
   environment.systemPackages = lib.optionals enableDocker (with pkgs; [
     docker-compose
     ctop
