@@ -9,12 +9,6 @@
         description = "Enable Docker support.";
       };
 
-      enableDockerRootless = lib.mkOption {
-        type = lib.types.bool;
-        default = lib.mkDefault false;
-        description = "Enable Docker rootless mode.";
-      };
-
       enableDockerDesktop = lib.mkOption {
         type = lib.types.bool;
         default = lib.mkDefault false;
