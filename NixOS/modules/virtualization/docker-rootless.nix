@@ -12,8 +12,6 @@ in
     };
   };
 
-
-
   environment.systemPackages = lib.optionals enableDockerRootless (with pkgs; [
     docker-compose
     ctop
