@@ -9,11 +9,13 @@ This project isn't finished; it's currently barely usable. It might improve as s
 ### High Priority
 
 - Implement dynamic VHDX allocation for the home directory instead of static 5GB.
+- Add overlays, so it doesnt just install unstable packages and you get the choice. 
 
 ### Medium Priority
 
 - Integrate dotfiles for common tools such as Zsh, Git, Neovim, Tmux, and others.
 - Configure Standalone Home Manager for both the `nixos` and `root` user.
+- Nix configs for my standalone server
 
 ### Low Priority
 
