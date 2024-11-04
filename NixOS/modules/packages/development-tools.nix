@@ -13,6 +13,7 @@ in
     python3
     python3Packages.pip
     nodejs
+    dotnet-sdk_8
     nodePackages.npm
     nodePackages.yarn
     nodePackages.pnpm
