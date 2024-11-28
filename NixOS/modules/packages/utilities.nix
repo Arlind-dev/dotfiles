@@ -13,5 +13,6 @@ in
     wget
     tcpdump
     bat
+    jq
   ]);
 }
