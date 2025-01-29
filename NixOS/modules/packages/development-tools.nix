@@ -17,5 +17,6 @@ in
     nodePackages.npm
     nodePackages.yarn
     nodePackages.pnpm
+    nodePackages.nodemon
   ]);
 }
