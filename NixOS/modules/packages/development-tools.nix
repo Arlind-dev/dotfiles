@@ -18,6 +18,6 @@ in
     nodePackages.yarn
     nodePackages.pnpm
     nodePackages.nodemon
-    cargo
+    rustup
   ]);
 }
