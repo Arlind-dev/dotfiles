@@ -14,5 +14,6 @@ in
     tcpdump
     bat
     jq
+    zip
   ]);
 }
