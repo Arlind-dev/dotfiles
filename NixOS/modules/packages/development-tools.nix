@@ -19,5 +19,6 @@ in
     nodePackages.pnpm
     nodePackages.nodemon
     rustup
+    act
   ]);
 }
