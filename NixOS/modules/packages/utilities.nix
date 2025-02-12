@@ -15,5 +15,6 @@ in
     bat
     jq
     zip
+    gh
   ]);
 }
