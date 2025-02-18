@@ -50,6 +50,5 @@
   wsl = {
     enable = true;
     defaultUser = "nixos";
-    nativeSystemd = true;
   };
 }
