@@ -12,7 +12,7 @@ $NixFilesDest = "/home/nixos/.dotfiles/nix"
 $HomePath = $env:USERPROFILE
 $WSLConfigPath = "$HomePath\.wslconfig"
 $WSLConfigBackupPath = "$HomePath\.wslconfigcopy"
-$VHDXSizeGB = 5GB
+$VHDXSizeGB = 30GB
 $ScriptPath = "$NixOSFolder\temp.ps1"
 
 # Function Definitions
