@@ -12,7 +12,7 @@ $NixFilesDest = "/home/nixos/.dotfiles/nix"
 $HomePath = $env:USERPROFILE
 $WSLConfigPath = "$HomePath\.wslconfig"
 $WSLConfigBackupPath = "$HomePath\.wslconfigcopy"
-$VHDXSizeGB = 30GB
+$VHDXSizeGB = 5GB
 $ScriptPath = "$NixOSFolder\temp.ps1"
 
 # Function Definitions
@@ -238,7 +238,7 @@ function Invoke-DownloadNixOSImage {
         $message = "Downloading NixOS image..."
         Write-Host $message
         Write-OutputLog $message
-        Invoke-WebRequest -Uri "https://github.com/nix-community/NixOS-WSL/releases/latest/download/nixos-wsl.tar.gz" -OutFile $NixOSImage
+        Invoke-WebRequest -Uri "https://github.com/nix-community/NixOS-WSL/releases/download/2405.5.4/nixos-wsl.tar.gz" -OutFile $NixOSImage
         $message = "Downloaded NixOS image."
         Write-Host $message
         Write-OutputLog $message
