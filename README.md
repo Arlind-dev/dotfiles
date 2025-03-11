@@ -12,6 +12,7 @@ This project isn't finished; it's currently barely usable. It might improve as s
 - Implement dynamic VHDX allocation for the home directory instead of static 30GB.
 - Add overlays, so it doesnt just install unstable packages and you get the choice.
 - Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All
+- Implement https://github.com/Misterio77/nix-starter-configs
 
 ### Medium Priority
 
