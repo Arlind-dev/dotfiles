@@ -46,11 +46,11 @@ in
     vimAlias = true;
   };
 
-  environment.variables = lib.mkIf enableK3s {
+  environment.variables = {
     EDITOR = "nvim";
+    GPG_TTY = "$(tty)";
+  } // lib.mkIf enableK3s {
     KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
-  } // {
-    EDITOR = "nvim";
   };
 
   system.autoUpgrade.enable = true;
