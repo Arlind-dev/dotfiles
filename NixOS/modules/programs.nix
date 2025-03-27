@@ -22,6 +22,7 @@ in
       "sync-dotfiles" = "git -C ~/.dotfiles/nix pull";
       "clean" = "nix-collect-garbage -d";
       "rebuild-all" = "sync-dotfiles && update && rebuild && clean";
+      "nix-repo-ssh" = "git -C ~/.dotfiles/nix remote set-url origin git@github.com:Arlind-dev/dotfiles.git";
     };
     ohMyZsh = {
       enable = true;
