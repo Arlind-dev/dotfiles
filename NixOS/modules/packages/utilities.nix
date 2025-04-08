@@ -16,5 +16,6 @@ in
     jq
     zip
     gh
+    dig
   ]);
 }
