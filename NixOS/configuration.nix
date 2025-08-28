@@ -41,12 +41,6 @@
   nix.gc.automatic = true;
   nix.gc.dates = "daily";
 
-  fileSystems."/home/nixos" = {
-    device = "/mnt/c/wsl/nixos/home.vhdx";
-    fsType = "ext4";
-    options = [ "defaults" ];
-  };
-
   wsl = {
     enable = true;
     defaultUser = "nixos";

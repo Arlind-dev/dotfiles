@@ -8,11 +8,11 @@ $ErrorActionPreference = 'Stop'
 $NixOSFolder         = "C:\wsl\nixos"
 $LogsFolder          = "$NixOSFolder\logs"
 $CurrentDateTime     = (Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
+# Separate files to avoid locking conflicts
 $LogFile             = "$LogsFolder\setup_$CurrentDateTime.log"
 $TranscriptFile      = "$LogsFolder\setup_$CurrentDateTime.transcript.txt"
-$NixOSReleaseTag     = "2505.7.0"
-$NixOSPackage        = "$NixOSFolder\nixos.wsl"
-$VHDXPath            = "$NixOSFolder\home.vhdx"
+$NixOSReleaseTag     = "2505.7.0"            # pin for reproducibility
+$NixOSPackage        = "$NixOSFolder\nixos.wsl"   # uses .wsl now
 $RepoURL             = "https://github.com/Arlind-dev/dotfiles"
 $RepoPath            = "$NixOSFolder\dotfiles"
 $NixFilesSource      = "/mnt/c/wsl/nixos/dotfiles/NixOS"
@@ -20,7 +20,6 @@ $NixFilesDest        = "/home/nixos/.dotfiles/nix"
 $HomePath            = $env:USERPROFILE
 $WSLConfigPath       = "$HomePath\.wslconfig"
 $WSLConfigBackupPath = "$HomePath\.wslconfigcopy"
-$VHDXSizeGB          = 30GB
 $ScriptPath          = "$NixOSFolder\temp.ps1"
 
 # =========================
@@ -32,8 +31,10 @@ function Write-OutputLog {
     $line = "[$timestamp] $message"
     Write-Host $line
     try {
+        # Use Add-Content; if anything locks temporarily, swallow to avoid crashing init
         Add-Content -Path $LogFile -Value $line -Encoding UTF8 -ErrorAction Stop
     } catch {
+        # Non-fatal: best-effort logging
     }
 }
 
@@ -77,6 +78,7 @@ function Initialize-LogsFolder {
             New-Item -Path $LogsFolder -ItemType Directory -Force | Out-Null
         }
 
+        # Start transcript to a DIFFERENT file than $LogFile
         try {
             Start-Transcript -Path $TranscriptFile -Append -ErrorAction Stop | Out-Null
             Write-OutputLog "Transcript started at $TranscriptFile."
@@ -89,6 +91,7 @@ function Initialize-LogsFolder {
     }
     catch {
         Write-Host "Failed to initialize logging at $LogsFolder."
+        # Avoid writing to the (possibly locked) log again here
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -150,23 +153,6 @@ function Test-VirtualizationPrereqs {
         Write-OutputLog "Failed to validate virtualization prerequisites: $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
-    }
-}
-
-function Check-FreeSpaceForVHDX {
-    try {
-        $drive = Get-Item -LiteralPath $NixOSFolder
-        $root = (Get-Item $drive.PSDrive.Root).PSDrive.Name
-        $psd = Get-PSDrive -Name $root
-        $freeBytes = [int64]$psd.Free
-        if ($freeBytes -lt $VHDXSizeGB) {
-            Write-OutputLog "Not enough free space on $root`: need $([Math]::Round($VHDXSizeGB/1GB)) GB, available $([Math]::Round($freeBytes/1GB)) GB."
-            Read-Host -Prompt "Press Enter to exit"
-            Exit 1
-        }
-        Write-OutputLog "Sufficient free space detected on $root."
-    } catch {
-        Write-OutputLog "Could not verify free space: $_ (continuing cautiously)"
     }
 }
 
@@ -364,22 +350,6 @@ function Set-DefaultWSL {
     }
 }
 
-function New-FormatVHD {
-    try {
-        Write-OutputLog "Creating and formatting VHD for home directory..."
-        Check-FreeSpaceForVHDX
-        New-VHD -Path $VHDXPath -SizeBytes $VHDXSizeGB -Fixed | Out-Null
-        $formatDisk = "sudo mkfs.ext4 /mnt/c/wsl/nixos/home.vhdx"
-        wsl.exe -d NixOS -- bash -c $formatDisk
-        Write-OutputLog "Created and formatted VHD ($([Math]::Round($VHDXSizeGB/1GB)) GB) for home directory."
-    }
-    catch {
-        Write-OutputLog "Failed to create or format VHD. $_"
-        Read-Host -Prompt "Press Enter to exit"
-        Exit 1
-    }
-}
-
 function Copy-NixOSConfigurationFiles {
     try {
         Write-OutputLog "Copying NixOS configuration files to $NixFilesDest..."
@@ -534,6 +504,7 @@ function main {
     Test-NetworkConnectivity
     Test-VirtualizationPrereqs
 
+    # Ensure core Windows features
     $dismOutput = dism.exe /online /get-featureinfo /featurename:Microsoft-Windows-Subsystem-Linux | Select-String "State : (\w+)"
     $wslFeatureState = $dismOutput.Matches[0].Groups[1].Value
     if ($wslFeatureState -ne "Enabled") {
@@ -577,10 +548,6 @@ function main {
 
     Import-NixOS
     Set-DefaultWSL
-
-    if (-Not (Test-Path -Path $VHDXPath)) {
-        New-FormatVHD
-    }
 
     Copy-NixOSConfigurationFiles
     Invoke-RebuildWithFlake "~/.dotfiles/nix"
