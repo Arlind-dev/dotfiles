@@ -9,6 +9,7 @@ $NixOSFolder         = "C:\wsl\nixos"
 $LogsFolder          = "$NixOSFolder\logs"
 $CurrentDateTime     = (Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
 $LogFile             = "$LogsFolder\setup_$CurrentDateTime.log"
+$TranscriptFile      = "$LogsFolder\setup_$CurrentDateTime.transcript.txt"
 $NixOSReleaseTag     = "2505.7.0"
 $NixOSPackage        = "$NixOSFolder\nixos.wsl"
 $VHDXPath            = "$NixOSFolder\home.vhdx"
@@ -30,7 +31,10 @@ function Write-OutputLog {
     $timestamp = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
     $line = "[$timestamp] $message"
     Write-Host $line
-    $line | Out-File -Append -FilePath $LogFile -Encoding UTF8
+    try {
+        Add-Content -Path $LogFile -Value $line -Encoding UTF8 -ErrorAction Stop
+    } catch {
+    }
 }
 
 function Invoke-Retry {
@@ -71,18 +75,20 @@ function Initialize-LogsFolder {
     try {
         if (-Not (Test-Path -Path $LogsFolder)) {
             New-Item -Path $LogsFolder -ItemType Directory -Force | Out-Null
-            Write-OutputLog "Created logs folder at $LogsFolder."
         }
+
         try {
-            Start-Transcript -Path $LogFile -Append -ErrorAction Stop | Out-Null
-            Write-OutputLog "Transcript started at $LogFile."
+            Start-Transcript -Path $TranscriptFile -Append -ErrorAction Stop | Out-Null
+            Write-OutputLog "Transcript started at $TranscriptFile."
         } catch {
+            # Non-fatal if transcript can't start (e.g., already running)
             Write-OutputLog "Could not start transcript: $_"
         }
+
+        Write-OutputLog "Logs folder ready at $LogsFolder."
     }
     catch {
-        Write-Host "Failed to create logs folder at $LogsFolder."
-        Write-OutputLog "Failed to create logs folder at $LogsFolder."
+        Write-Host "Failed to initialize logging at $LogsFolder."
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -127,34 +133,18 @@ function Invoke-CheckAdminElevation {
 # =========================
 function Test-VirtualizationPrereqs {
     try {
-        Write-OutputLog "Validating CPU & firmware virtualization prerequisites via systeminfo..."
-        $si = systeminfo.exe | Out-String
-        $lines = $si -split "(`r`n|`n|`r)"
+        Write-OutputLog "Validating CPU & firmware virtualization prerequisites..."
 
-        $reqs = @{
-            "VM Monitor Mode Extensions"         = $false
-            "Virtualization Enabled In Firmware" = $false
-            "Second Level Address Translation"   = $false
-            "Data Execution Prevention Available"= $false
-        }
+        $cpu = Get-WmiObject Win32_Processor | Select-Object Name, VirtualizationFirmwareEnabled
 
-        foreach ($line in $lines) {
-            foreach ($key in $reqs.Keys) {
-                if ($line -match [regex]::Escape($key)) {
-                    if ($line -match ":\s*Yes") { $reqs[$key] = $true }
-                }
-            }
-        }
-
-        $failed = $reqs.GetEnumerator() | Where-Object { -not $_.Value } | Select-Object -ExpandProperty Key
-        if ($failed.Count -gt 0) {
-            Write-OutputLog "Virtualization prerequisite check FAILED for: $($failed -join ', ')."
-            Write-OutputLog "Please enable virtualization (Intel VT-x/AMD-V) in BIOS/UEFI and ensure DEP/SLAT are available."
+        if (-not $cpu.VirtualizationFirmwareEnabled) {
+            Write-OutputLog "Virtualization prerequisite check FAILED: Virtualization is not enabled in firmware (BIOS/UEFI)."
+            Write-OutputLog "Please enable Intel VT-x / AMD-V in BIOS/UEFI settings."
             Read-Host -Prompt "Press Enter to exit"
             Exit 1
         }
 
-        Write-OutputLog "Virtualization prerequisites OK."
+        Write-OutputLog "Virtualization prerequisites OK. CPU: $($cpu.Name)"
     }
     catch {
         Write-OutputLog "Failed to validate virtualization prerequisites: $_"
@@ -544,7 +534,6 @@ function main {
     Test-NetworkConnectivity
     Test-VirtualizationPrereqs
 
-    # Ensure core Windows features
     $dismOutput = dism.exe /online /get-featureinfo /featurename:Microsoft-Windows-Subsystem-Linux | Select-String "State : (\w+)"
     $wslFeatureState = $dismOutput.Matches[0].Groups[1].Value
     if ($wslFeatureState -ne "Enabled") {
