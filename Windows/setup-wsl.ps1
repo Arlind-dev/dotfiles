@@ -1,40 +1,88 @@
+#Requires -RunAsAdministrator
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+# =========================
 # Variable Definitions
-$NixOSFolder = "C:\wsl\nixos"
-$LogsFolder = "$NixOSFolder\logs"
-$CurrentDateTime = (Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
-$LogFile = "$LogsFolder\setup_$CurrentDateTime.log"
-$NixOSImage = "$NixOSFolder\nixos-wsl.tar.gz"
-$VHDXPath = "$NixOSFolder\home.vhdx"
-$RepoURL = "https://github.com/Arlind-dev/dotfiles"
-$RepoPath = "$NixOSFolder\dotfiles"
-$NixFilesSource = "/mnt/c/wsl/nixos/dotfiles/NixOS"
-$NixFilesDest = "/home/nixos/.dotfiles/nix"
-$HomePath = $env:USERPROFILE
-$WSLConfigPath = "$HomePath\.wslconfig"
+# =========================
+$NixOSFolder         = "C:\wsl\nixos"
+$LogsFolder          = "$NixOSFolder\logs"
+$CurrentDateTime     = (Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
+$LogFile             = "$LogsFolder\setup_$CurrentDateTime.log"
+$NixOSReleaseTag     = "2505.7.0"
+$NixOSPackage        = "$NixOSFolder\nixos.wsl"
+$VHDXPath            = "$NixOSFolder\home.vhdx"
+$RepoURL             = "https://github.com/Arlind-dev/dotfiles"
+$RepoPath            = "$NixOSFolder\dotfiles"
+$NixFilesSource      = "/mnt/c/wsl/nixos/dotfiles/NixOS"
+$NixFilesDest        = "/home/nixos/.dotfiles/nix"
+$HomePath            = $env:USERPROFILE
+$WSLConfigPath       = "$HomePath\.wslconfig"
 $WSLConfigBackupPath = "$HomePath\.wslconfigcopy"
-$VHDXSizeGB = 30GB
-$ScriptPath = "$NixOSFolder\temp.ps1"
+$VHDXSizeGB          = 30GB
+$ScriptPath          = "$NixOSFolder\temp.ps1"
 
-# Function Definitions
-
+# =========================
+# Helper / Utility
+# =========================
 function Write-OutputLog {
-    param ([string]$message)
-    Write-Output $message | Out-File -Append $LogFile
+    param([string]$message)
+    $timestamp = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
+    $line = "[$timestamp] $message"
+    Write-Host $line
+    $line | Out-File -Append -FilePath $LogFile -Encoding UTF8
 }
 
+function Invoke-Retry {
+    param(
+        [Parameter(Mandatory)] [scriptblock] $ScriptBlock,
+        [int] $MaxAttempts = 3,
+        [int] $DelaySeconds = 2
+    )
+    for ($i = 1; $i -le $MaxAttempts; $i++) {
+        try { return & $ScriptBlock } catch {
+            if ($i -eq $MaxAttempts) { throw }
+            Start-Sleep -Seconds ($DelaySeconds * $i)
+        }
+    }
+}
+
+function Test-NetworkConnectivity {
+    try {
+        Write-OutputLog "Checking network connectivity to github.com..."
+        $ok = Test-NetConnection github.com -Port 443 -InformationLevel Quiet
+        if (-not $ok) {
+            Write-OutputLog "Network check failed (github.com:443). Please ensure you have internet access and retry."
+            Read-Host -Prompt "Press Enter to exit"
+            Exit 1
+        }
+        Write-OutputLog "Network connectivity OK."
+    } catch {
+        Write-OutputLog "Network check encountered an error: $_"
+        Read-Host -Prompt "Press Enter to exit"
+        Exit 1
+    }
+}
+
+# =========================
+# Initialization
+# =========================
 function Initialize-LogsFolder {
     try {
         if (-Not (Test-Path -Path $LogsFolder)) {
             New-Item -Path $LogsFolder -ItemType Directory -Force | Out-Null
-            $message = "Created logs folder at $LogsFolder."
-            Write-Host $message
-            Write-OutputLog $message
+            Write-OutputLog "Created logs folder at $LogsFolder."
+        }
+        try {
+            Start-Transcript -Path $LogFile -Append -ErrorAction Stop | Out-Null
+            Write-OutputLog "Transcript started at $LogFile."
+        } catch {
+            Write-OutputLog "Could not start transcript: $_"
         }
     }
     catch {
-        $message = "Failed to create logs folder at $LogsFolder."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-Host "Failed to create logs folder at $LogsFolder."
+        Write-OutputLog "Failed to create logs folder at $LogsFolder."
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -43,7 +91,6 @@ function Initialize-LogsFolder {
 function Invoke-CheckAdminElevation {
     if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
         $message = "Script is not running as administrator. Attempting to restart with elevated privileges..."
-        Write-Host $message
         Write-OutputLog $message
 
         $pwshPath = Get-Command pwsh -ErrorAction SilentlyContinue
@@ -54,52 +101,96 @@ function Invoke-CheckAdminElevation {
         if (-not $PSCommandPath) {
             if (-Not (Test-Path -Path $NixOSFolder)) {
                 New-Item -Path $NixOSFolder -ItemType Directory -Force | Out-Null
-                $message = "Created NixOS folder at $NixOSFolder."
-                Write-Host $message
-                Write-OutputLog $message
+                Write-OutputLog "Created NixOS folder at $NixOSFolder."
             }
 
-            $scriptContent = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Arlind-dev/dotfiles/main/Windows/setup-wsl.ps1").Content
-            Set-Content -Path $ScriptPath -Value $scriptContent
-            $message = "Downloaded and saved script content to $ScriptPath."
-            Write-Host $message
-            Write-OutputLog $message
+            $scriptUrl = "https://raw.githubusercontent.com/Arlind-dev/dotfiles/main/Windows/setup-wsl.ps1"
+            $scriptContent = (Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing -ErrorAction Stop).Content
+            Set-Content -Path $ScriptPath -Value $scriptContent -Encoding UTF8
+            Write-OutputLog "Downloaded and saved script content to $ScriptPath."
         }
 
         if ($wtPath) {
-            $message = "Windows Terminal found. Restarting in Windows Terminal with $shellPath..."
-            Write-Host $message
-            Write-OutputLog $message
+            Write-OutputLog "Windows Terminal found. Restarting in Windows Terminal with $shellPath..."
             Start-Process -FilePath "wt.exe" -ArgumentList "new-tab $shellPath -NoProfile -ExecutionPolicy Bypass -File `"$ScriptPath`"" -Verb RunAs
         }
         else {
-            $message = "Windows Terminal not found. Restarting with $shellPath..."
-            Write-Host $message
-            Write-OutputLog $message
+            Write-OutputLog "Windows Terminal not found. Restarting with $shellPath..."
             Start-Process -FilePath $shellPath -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptPath`"" -Verb RunAs
         }
-
         Exit
     }
 }
 
-function Enable-WSLFeature {
+# =========================
+# Preflight / Validation
+# =========================
+function Test-VirtualizationPrereqs {
     try {
-        $message = "Enabling Windows Subsystem for Linux feature..."
-        Write-Host $message
-        Write-OutputLog $message
-        dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart | Out-Null
-        $message = "Enabled Windows Subsystem for Linux feature."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Validating CPU & firmware virtualization prerequisites via systeminfo..."
+        $si = systeminfo.exe | Out-String
+        $lines = $si -split "(`r`n|`n|`r)"
+
+        $reqs = @{
+            "VM Monitor Mode Extensions"         = $false
+            "Virtualization Enabled In Firmware" = $false
+            "Second Level Address Translation"   = $false
+            "Data Execution Prevention Available"= $false
+        }
+
+        foreach ($line in $lines) {
+            foreach ($key in $reqs.Keys) {
+                if ($line -match [regex]::Escape($key)) {
+                    if ($line -match ":\s*Yes") { $reqs[$key] = $true }
+                }
+            }
+        }
+
+        $failed = $reqs.GetEnumerator() | Where-Object { -not $_.Value } | Select-Object -ExpandProperty Key
+        if ($failed.Count -gt 0) {
+            Write-OutputLog "Virtualization prerequisite check FAILED for: $($failed -join ', ')."
+            Write-OutputLog "Please enable virtualization (Intel VT-x/AMD-V) in BIOS/UEFI and ensure DEP/SLAT are available."
+            Read-Host -Prompt "Press Enter to exit"
+            Exit 1
+        }
+
+        Write-OutputLog "Virtualization prerequisites OK."
     }
     catch {
-        $message = "Failed to enable Windows Subsystem for Linux feature."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to validate virtualization prerequisites: $_"
+        Read-Host -Prompt "Press Enter to exit"
+        Exit 1
+    }
+}
+
+function Check-FreeSpaceForVHDX {
+    try {
+        $drive = Get-Item -LiteralPath $NixOSFolder
+        $root = (Get-Item $drive.PSDrive.Root).PSDrive.Name
+        $psd = Get-PSDrive -Name $root
+        $freeBytes = [int64]$psd.Free
+        if ($freeBytes -lt $VHDXSizeGB) {
+            Write-OutputLog "Not enough free space on $root`: need $([Math]::Round($VHDXSizeGB/1GB)) GB, available $([Math]::Round($freeBytes/1GB)) GB."
+            Read-Host -Prompt "Press Enter to exit"
+            Exit 1
+        }
+        Write-OutputLog "Sufficient free space detected on $root."
+    } catch {
+        Write-OutputLog "Could not verify free space: $_ (continuing cautiously)"
+    }
+}
+
+# =========================
+# Windows Features
+# =========================
+function Enable-WSLFeature {
+    try {
+        Write-OutputLog "Enabling Windows Subsystem for Linux feature (if not already enabled)..."
+        dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart | Out-Null
+        Write-OutputLog "WSL feature ensured."
+    }
+    catch {
+        Write-OutputLog "Failed to enable WSL feature. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -107,21 +198,31 @@ function Enable-WSLFeature {
 
 function Set-WSLDefaultVersion2 {
     try {
-        $message = "Setting WSL default version to 2..."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Setting WSL default version to 2..."
         wsl.exe --set-default-version 2
-        $message = "Set WSL default version to 2."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "WSL default version set to 2."
     }
     catch {
-        $message = "Failed to set WSL default version to 2."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to set WSL default version to 2. $_"
+        Read-Host -Prompt "Press Enter to exit"
+        Exit 1
+    }
+}
+
+function Enable-HyperVFeature {
+    try {
+        Write-OutputLog "Ensuring Microsoft-Hyper-V optional feature is enabled..."
+        $featureState = (dism.exe /online /get-featureinfo /featurename:Microsoft-Hyper-V | Select-String "State : (\w+)").Matches.Groups[1].Value
+        if ($featureState -ne "Enabled") {
+            Write-OutputLog "Hyper-V not enabled. Enabling now..."
+            Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart | Out-Null
+            Write-OutputLog "Microsoft-Hyper-V feature enabled (restart may be required)."
+        } else {
+            Write-OutputLog "Microsoft-Hyper-V already enabled."
+        }
+    }
+    catch {
+        Write-OutputLog "Failed to enable Microsoft-Hyper-V feature. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -135,77 +236,58 @@ function Update-WSLConfig {
 
     try {
         if (Test-Path -Path $configPath) {
-            $currentConfig = Get-Content -Path $configPath
+            $currentConfig = Get-Content -Path $configPath -ErrorAction Stop
 
             $hasWSL2Section = $currentConfig -contains $wsl2Section
             $hasKernelCommandLine = $currentConfig -contains $newConfigLine
 
             if (-not $hasKernelCommandLine) {
                 Copy-Item -Path $configPath -Destination $WSLConfigBackupPath -Force
-                $message = "Backed up existing .wslconfig to $WSLConfigBackupPath."
-                Write-Host $message
-                Write-OutputLog $message
+                Write-OutputLog "Backed up existing .wslconfig to $WSLConfigBackupPath."
 
                 if (-not $hasWSL2Section) {
                     Add-Content -Path $configPath -Value "`r`n$wsl2Section`r`n$newConfigLine"
-                    $message = "Added [wsl2] section and updated .wslconfig at $configPath."
-                    Write-Host $message
-                    Write-OutputLog $message
+                    Write-OutputLog "Added [wsl2] section and updated .wslconfig at $configPath."
                 }
                 else {
                     $wsl2Index = [Array]::IndexOf($currentConfig, $wsl2Section)
-                    $contentBeforeWSL2 = $currentConfig[0..$wsl2Index]
-                    $contentAfterWSL2 = $currentConfig[($wsl2Index + 1)..($currentConfig.Length - 1)]
-
-                    $newConfig = $contentBeforeWSL2 + $newConfigLine + $contentAfterWSL2
-                    Set-Content -Path $configPath -Value $newConfig
-                    $message = "Updated .wslconfig at $configPath."
-                    Write-Host $message
-                    Write-OutputLog $message
+                    $contentBefore = $currentConfig[0..$wsl2Index]
+                    $contentAfter  = @()
+                    if ($wsl2Index + 1 -lt $currentConfig.Length) {
+                        $contentAfter = $currentConfig[($wsl2Index + 1)..($currentConfig.Length - 1)]
+                    }
+                    $newConfig = $contentBefore + $newConfigLine + $contentAfter
+                    Set-Content -Path $configPath -Value $newConfig -Encoding UTF8
+                    Write-OutputLog "Updated .wslconfig at $configPath."
                 }
             }
             else {
-                $message = "No changes needed in .wslconfig."
-                Write-Host $message
-                Write-OutputLog $message
+                Write-OutputLog "No changes needed in .wslconfig."
             }
         }
         else {
-            Set-Content -Path $configPath -Value "[wsl2]`r`n$newConfigLine"
-            $message = "Created new .wslconfig at $configPath."
-            Write-Host $message
-            Write-OutputLog $message
+            Set-Content -Path $configPath -Value "[wsl2]`r`n$newConfigLine" -Encoding UTF8
+            Write-OutputLog "Created new .wslconfig at $configPath."
         }
     }
     catch {
-        $message = "Failed to update .wslconfig."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to update .wslconfig. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
 }
 
+# =========================
+# WSL / NixOS Steps
+# =========================
 function Install-WSL {
     try {
-        $message = "Installing WSL..."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Installing WSL (no distribution)..."
         wsl.exe --install --no-distribution
-        $message = "WSL installed successfully."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "WSL installation ensured."
     }
     catch {
-        $message = "Failed to install WSL."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to install WSL. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -213,43 +295,28 @@ function Install-WSL {
 
 function Unregister-NixOS {
     try {
-        $message = "Unregistering NixOS..."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Unregistering existing NixOS (if present)..."
         wsl.exe --unregister NixOS
-        $message = "NixOS unregistered."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "NixOS unregistered."
     }
     catch {
-        $message = "Failed to unregister NixOS."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to unregister NixOS. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
 }
 
-function Invoke-DownloadNixOSImage {
+function Invoke-DownloadNixOSPackage {
     try {
-        $message = "Downloading NixOS image..."
-        Write-Host $message
-        Write-OutputLog $message
-        Invoke-WebRequest -Uri "https://github.com/nix-community/NixOS-WSL/releases/download/2405.5.4/nixos-wsl.tar.gz" -OutFile $NixOSImage
-        $message = "Downloaded NixOS image."
-        Write-Host $message
-        Write-OutputLog $message
+        $url = "https://github.com/nix-community/NixOS-WSL/releases/download/$NixOSReleaseTag/nixos.wsl"
+        Write-OutputLog "Downloading NixOS package (.wsl) from $url ..."
+        Invoke-Retry -ScriptBlock {
+            Invoke-WebRequest -Uri $url -OutFile $NixOSPackage -UseBasicParsing -ErrorAction Stop
+        } | Out-Null
+        Write-OutputLog "Downloaded NixOS package to $NixOSPackage."
     }
     catch {
-        $message = "Failed to download NixOS image."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to download NixOS package. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -257,21 +324,12 @@ function Invoke-DownloadNixOSImage {
 
 function Invoke-CloneDotfilesRepository {
     try {
-        $message = "Cloning dotfiles repository..."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Cloning dotfiles repository..."
         git clone $RepoURL $RepoPath
-        $message = "Cloned dotfiles repository."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Cloned dotfiles repository to $RepoPath."
     }
     catch {
-        $message = "Failed to clone repository."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to clone repository. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -279,21 +337,12 @@ function Invoke-CloneDotfilesRepository {
 
 function Update-DotfilesRepository {
     try {
-        $message = "Updating dotfiles repository..."
-        Write-Host $message
-        Write-OutputLog $message
-        git -C $RepoPath pull
-        $message = "Updated dotfiles repository."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Updating dotfiles repository..."
+        git -C $RepoPath pull --ff-only
+        Write-OutputLog "Updated dotfiles repository."
     }
     catch {
-        $message = "Failed to update repository."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to update repository. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -301,21 +350,12 @@ function Update-DotfilesRepository {
 
 function Import-NixOS {
     try {
-        $message = "Importing NixOS..."
-        Write-Host $message
-        Write-OutputLog $message
-        wsl.exe --import NixOS "$NixOSFolder" "$NixOSImage"
-        $message = "Imported NixOS."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Importing NixOS from .wsl package..."
+        wsl.exe --import NixOS "$NixOSFolder" "$NixOSPackage"
+        Write-OutputLog "Imported NixOS."
     }
     catch {
-        $message = "Failed to import NixOS."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to import NixOS. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -323,21 +363,12 @@ function Import-NixOS {
 
 function Set-DefaultWSL {
     try {
-        $message = "Setting NixOS as the default WSL distribution..."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Setting NixOS as the default WSL distribution..."
         wsl.exe -s NixOS
-        $message = "Set NixOS as default."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Set NixOS as default."
     }
     catch {
-        $message = "Failed to set NixOS as default."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to set NixOS as default. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -345,23 +376,15 @@ function Set-DefaultWSL {
 
 function New-FormatVHD {
     try {
-        $message = "Creating and formatting VHD for home directory..."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Creating and formatting VHD for home directory..."
+        Check-FreeSpaceForVHDX
         New-VHD -Path $VHDXPath -SizeBytes $VHDXSizeGB -Fixed | Out-Null
         $formatDisk = "sudo mkfs.ext4 /mnt/c/wsl/nixos/home.vhdx"
         wsl.exe -d NixOS -- bash -c $formatDisk
-        $message = "Created and formatted VHD for home directory."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Created and formatted VHD ($([Math]::Round($VHDXSizeGB/1GB)) GB) for home directory."
     }
     catch {
-        $message = "Failed to create or format VHD."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to create or format VHD. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -369,22 +392,13 @@ function New-FormatVHD {
 
 function Copy-NixOSConfigurationFiles {
     try {
-        $message = "Copying NixOS configuration files to $NixFilesDest..."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Copying NixOS configuration files to $NixFilesDest..."
         wsl.exe -d NixOS -- bash -c "mkdir -p $NixFilesDest"
         wsl.exe -d NixOS -- bash -c "cp -r $NixFilesSource/* $NixFilesDest"
-        $message = "Copied NixOS configuration files."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Copied NixOS configuration files."
     }
     catch {
-        $message = "Failed to copy NixOS configuration files."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to copy NixOS configuration files. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -393,21 +407,12 @@ function Copy-NixOSConfigurationFiles {
 function Invoke-RebuildWithFlake {
     param ([string]$flakePath = "~/.dotfiles/nix")
     try {
-        $message = "Rebuilding NixOS with flake configuration at $flakePath..."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Rebuilding NixOS with flake configuration at $flakePath..."
         wsl.exe -d NixOS -- bash -c "sudo nixos-rebuild switch --flake $flakePath"
-        $message = "Rebuild with flake at $flakePath completed."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Rebuild with flake at $flakePath completed."
     }
     catch {
-        $message = "Failed to rebuild NixOS with flake at $flakePath."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred during rebuild: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to rebuild NixOS with flake at $flakePath. Error: $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -415,21 +420,12 @@ function Invoke-RebuildWithFlake {
 
 function Stop-WSL {
     try {
-        $message = "Shutting down WSL..."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Shutting down WSL..."
         wsl.exe --shutdown
-        $message = "WSL shutdown."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "WSL shutdown."
     }
     catch {
-        $message = "Failed to shut down WSL."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to shut down WSL. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -437,21 +433,12 @@ function Stop-WSL {
 
 function Set-Ownership {
     try {
-        $message = "Changing ownership of home directory..."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Changing ownership of home directory..."
         wsl.exe -d NixOS -- bash -c "sudo chown -R 1000:100 /home/nixos"
-        $message = "Changed ownership of home directory."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Changed ownership of home directory."
     }
     catch {
-        $message = "Failed to change ownership of home directory."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to change ownership of home directory. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -459,21 +446,12 @@ function Set-Ownership {
 
 function Set-UserPassword {
     try {
-        $message = "Setting password for 'nixos' user..."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Setting password for 'nixos' user..."
         wsl.exe -d NixOS -- bash -c "echo 'nixos:nixos' | sudo chpasswd"
-        $message = "Password for 'nixos' user set."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Password for 'nixos' user set."
     }
     catch {
-        $message = "Failed to set password for 'nixos' user."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to set password for 'nixos' user. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -481,21 +459,12 @@ function Set-UserPassword {
 
 function Remove-OldHomeManagerProfiles {
     try {
-        $message = "Removing old home-manager profiles..."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Removing old home-manager profiles..."
         wsl.exe -d NixOS -- bash -c "rm -rf /home/nixos/.local/state/nix/profiles/home-manager*"
-        $message = "Removed old home-manager profiles."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Removed old home-manager profiles."
     }
     catch {
-        $message = "Failed to remove old home-manager profiles."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to remove old home-manager profiles. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -503,21 +472,12 @@ function Remove-OldHomeManagerProfiles {
 
 function Remove-OldHomeManagerGcroots {
     try {
-        $message = "Removing old home-manager gcroots..."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Removing old home-manager gcroots..."
         wsl.exe -d NixOS -- bash -c "rm -rf /home/nixos/.local/state/home-manager/gcroots/current-home"
-        $message = "Removed old home-manager gcroots."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Removed old home-manager gcroots."
     }
     catch {
-        $message = "Failed to remove old home-manager gcroots."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to remove old home-manager gcroots. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -525,21 +485,12 @@ function Remove-OldHomeManagerGcroots {
 
 function New-NixFilesDirectory {
     try {
-        $message = "Creating directory for NixOS configuration files..."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Creating directory for NixOS configuration files..."
         wsl.exe -d NixOS -- bash -c "mkdir -p $NixFilesDest"
-        $message = "Created directory $NixFilesDest."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Created directory $NixFilesDest."
     }
     catch {
-        $message = "Failed to create directory $NixFilesDest."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to create directory $NixFilesDest. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -547,21 +498,12 @@ function New-NixFilesDirectory {
 
 function Copy-NixFiles {
     try {
-        $message = "Copying NixOS configuration files..."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Copying NixOS configuration files..."
         wsl.exe -d NixOS -- bash -c "cp -r $NixFilesSource/* $NixFilesDest"
-        $message = "Copied NixOS configuration files."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Copied NixOS configuration files."
     }
     catch {
-        $message = "Failed to copy NixOS configuration files."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to copy NixOS configuration files. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -569,21 +511,12 @@ function Copy-NixFiles {
 
 function Remove-OldDotfilesRepo {
     try {
-        $message = "Removing old dotfiles repository..."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Removing old dotfiles repository in ~/.dotfiles/nix ..."
         wsl.exe -d NixOS -- bash -c "rm -rf ~/.dotfiles/nix"
-        $message = "Removed old dotfiles repository."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Removed old dotfiles repository."
     }
     catch {
-        $message = "Failed to remove old dotfiles repository."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to remove old dotfiles repository. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -591,37 +524,34 @@ function Remove-OldDotfilesRepo {
 
 function Invoke-CloneNewDotfilesRepo {
     try {
-        $message = "Cloning new dotfiles repository..."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Cloning new dotfiles repository into ~/.dotfiles/nix/ ..."
         wsl.exe -d NixOS -- bash -c "git clone $RepoURL ~/.dotfiles/nix/"
-        $message = "Cloned new dotfiles repository."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Cloned new dotfiles repository."
     }
     catch {
-        $message = "Failed to clone new dotfiles repository."
-        Write-Host $message
-        Write-OutputLog $message
-        $errorMessage = "An error occurred: $_"
-        Write-Host $errorMessage
-        Write-OutputLog $errorMessage
+        Write-OutputLog "Failed to clone new dotfiles repository. $_"
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
 }
 
+# =========================
+# Main
+# =========================
 function main {
     Initialize-LogsFolder
-
     Invoke-CheckAdminElevation
+    Test-NetworkConnectivity
+    Test-VirtualizationPrereqs
 
+    # Ensure core Windows features
     $dismOutput = dism.exe /online /get-featureinfo /featurename:Microsoft-Windows-Subsystem-Linux | Select-String "State : (\w+)"
     $wslFeatureState = $dismOutput.Matches[0].Groups[1].Value
     if ($wslFeatureState -ne "Enabled") {
         Enable-WSLFeature
     }
 
+    Enable-HyperVFeature
     Set-WSLDefaultVersion2
 
     if (-Not (Test-Path -Path $WSLConfigPath) -or -Not ((Get-Content -Path $WSLConfigPath -ErrorAction SilentlyContinue) -match 'kernelCommandLine\s*=\s*cgroup_no_v1=all')) {
@@ -629,29 +559,24 @@ function main {
     }
 
     if (-Not (Get-Command git -ErrorAction SilentlyContinue)) {
-        $message = "Git is not installed. Please install Git before proceeding."
-        Write-Host $message
-        Write-OutputLog $message
+        Write-OutputLog "Git is not installed. Please install Git before proceeding."
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
 
-    $message = "Starting NixOS WSL setup..."
-    Write-Host $message
-    Write-OutputLog $message
+    Write-OutputLog "Starting NixOS WSL setup..."
 
-    $wslCheck = wsl.exe --version 2>$null
-    if (-Not $wslCheck) {
-        Install-WSL
-    }
+    $wslCheck = $null
+    try { $wslCheck = wsl.exe --version 2>$null } catch {}
+    if (-Not $wslCheck) { Install-WSL }
 
-    $wslInstances = wsl.exe -l -q
+    $wslInstances = (wsl.exe -l -q) -split "(`r`n|`n|`r)" | Where-Object { $_ -and $_.Trim() -ne "" }
     if ($wslInstances -contains "NixOS") {
         Unregister-NixOS
     }
 
-    if (-Not (Test-Path -Path $NixOSImage)) {
-        Invoke-DownloadNixOSImage
+    if (-Not (Test-Path -Path $NixOSPackage)) {
+        Invoke-DownloadNixOSPackage
     }
 
     if (-Not (Test-Path -Path $RepoPath)) {
@@ -662,7 +587,6 @@ function main {
     }
 
     Import-NixOS
-
     Set-DefaultWSL
 
     if (-Not (Test-Path -Path $VHDXPath)) {
@@ -670,35 +594,23 @@ function main {
     }
 
     Copy-NixOSConfigurationFiles
-
     Invoke-RebuildWithFlake "~/.dotfiles/nix"
 
     Stop-WSL
-
     Set-Ownership
-
     Set-UserPassword
-
     Remove-OldHomeManagerProfiles
-
     Remove-OldHomeManagerGcroots
-
     New-NixFilesDirectory
-
     Copy-NixFiles
-
     Invoke-RebuildWithFlake "~/.dotfiles/nix"
-
     Remove-OldDotfilesRepo
-
     Invoke-CloneNewDotfilesRepo
-
     Invoke-RebuildWithFlake "~/.dotfiles/nix/NixOS/"
 
-    $message = "Setup complete."
-    Write-Host $message
-    Write-OutputLog $message
+    Write-OutputLog "Setup complete."
 
+    try { Stop-Transcript | Out-Null } catch {}
     Read-Host -Prompt "Press Enter to exit"
 }
 
