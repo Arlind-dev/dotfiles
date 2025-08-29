@@ -28,17 +28,20 @@
     homeManagerModules = import ./modules/home-manager;
 
     nixosConfigurations = {
-      nixos = nixpkgs.lib.nixosSystem {
+      nixos-wsl = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = { inherit inputs; };
         modules = [
           nixos-wsl.nixosModules.default
-          ./nixos/configuration.nix
-          {
-            system.stateVersion = "25.05";
-            wsl.enable = true;
-            wsl.defaultUser = "nixos";
-          }
+          ./nixos/wsl.nix
+        ];
+      };
+
+      nixos-server = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./nixos/server.nix
         ];
       };
     };
