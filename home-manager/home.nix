@@ -1,8 +1,8 @@
 { inputs, lib, config, pkgs, ... }:
+
 {
   imports = [
-    ./zsh.nix
-    ./git.nix
+    ../modules/home-manager
   ];
 
   nixpkgs = {
@@ -22,4 +22,9 @@
 
   programs.home-manager.enable = true;
   systemd.user.startServices = "sd-switch";
+
+  myModules = {
+    git.enable = true;
+    zsh.enable = true;
+  };
 }
