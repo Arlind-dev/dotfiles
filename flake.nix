@@ -13,7 +13,6 @@
   };
 
   outputs = { self, nixpkgs, home-manager, nixos-wsl, ... }@inputs: let
-    inherit (self) outputs;
     systems = [
       "aarch64-linux" "i686-linux" "x86_64-linux"
       "aarch64-darwin" "x86_64-darwin"
@@ -31,7 +30,7 @@
     nixosConfigurations = {
       nixos = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = { inherit inputs outputs; };
+        specialArgs = { inherit inputs; };
         modules = [
           nixos-wsl.nixosModules.default
 
