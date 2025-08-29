@@ -25,16 +25,21 @@
     flakeInputs = lib.filterAttrs (_: lib.isType "flake") inputs;
   in {
     settings = {
-      experimental-features = "nix-command flakes";
+      experimental-features = [ "nix-command" "flakes" ];
       flake-registry = "";
+      download-buffer-size = 524288000;
     };
-    channel.enable = false;
 
-    registry = lib.mapAttrs (_: flake: {inherit flake;}) flakeInputs;
+    channel.enable = true;
+
+    registry = lib.mapAttrs (_: flake: { inherit flake; }) flakeInputs;
+
     nixPath = lib.mapAttrsToList (n: _: "${n}=flake:${n}") flakeInputs;
 
-    gc.automatic = true;
-    gc.dates = "daily";
+    gc = {
+      automatic = true;
+      dates = "daily";
+    };
   };
 
   networking.hostName = "nixos";
