@@ -107,7 +107,7 @@ function Invoke-CheckAdminElevation {
                 Write-OutputLog "Created NixOS folder at $NixOSFolder."
             }
 
-            $scriptUrl = "https://raw.githubusercontent.com/Arlind-dev/dotfiles/main/Windows/setup-wsl.ps1"
+            $scriptUrl = "https://raw.githubusercontent.com/Arlind-dev/dotfiles/main/wsl-install/setup-wsl.ps1"
             $scriptContent = (Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing -ErrorAction Stop).Content
             Set-Content -Path $ScriptPath -Value $scriptContent -Encoding UTF8
             Write-OutputLog "Downloaded and saved script content to $ScriptPath."
