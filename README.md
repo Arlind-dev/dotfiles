@@ -25,7 +25,7 @@ This project isn't finished; it's currently barely usable. It might improve as s
    Open PowerShell and run:
 
    ```PowerShell
-   Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Arlind-dev/dotfiles/main/Windows/setup-wsl.ps1").Content
+   Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Arlind-dev/dotfiles/main/wsl-install/setup-wsl.ps1").Content
    ```
 
    The script will check if it is running with administrative privileges and will restart itself with elevated permissions if necessary.

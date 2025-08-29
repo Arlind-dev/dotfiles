@@ -8,15 +8,14 @@ $ErrorActionPreference = 'Stop'
 $NixOSFolder         = "C:\wsl\nixos"
 $LogsFolder          = "$NixOSFolder\logs"
 $CurrentDateTime     = (Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
-# Separate files to avoid locking conflicts
 $LogFile             = "$LogsFolder\setup_$CurrentDateTime.log"
 $TranscriptFile      = "$LogsFolder\setup_$CurrentDateTime.transcript.txt"
-$NixOSReleaseTag     = "2505.7.0"            # pin for reproducibility
-$NixOSPackage        = "$NixOSFolder\nixos.wsl"   # uses .wsl now
+$NixOSReleaseTag     = "2505.7.0"
+$NixOSPackage        = "$NixOSFolder\nixos.wsl"
 $RepoURL             = "https://github.com/Arlind-dev/dotfiles"
 $RepoPath            = "$NixOSFolder\dotfiles"
-$NixFilesSource      = "/mnt/c/wsl/nixos/dotfiles/NixOS"
-$NixFilesDest        = "/home/nixos/.dotfiles/nix"
+$NixFilesSource      = "/mnt/c/wsl/nixos/dotfiles"
+$NixFilesDest        = "/home/nixos/nix-config"
 $HomePath            = $env:USERPROFILE
 $WSLConfigPath       = "$HomePath\.wslconfig"
 $WSLConfigBackupPath = "$HomePath\.wslconfigcopy"
@@ -31,10 +30,8 @@ function Write-OutputLog {
     $line = "[$timestamp] $message"
     Write-Host $line
     try {
-        # Use Add-Content; if anything locks temporarily, swallow to avoid crashing init
         Add-Content -Path $LogFile -Value $line -Encoding UTF8 -ErrorAction Stop
     } catch {
-        # Non-fatal: best-effort logging
     }
 }
 
@@ -78,12 +75,10 @@ function Initialize-LogsFolder {
             New-Item -Path $LogsFolder -ItemType Directory -Force | Out-Null
         }
 
-        # Start transcript to a DIFFERENT file than $LogFile
         try {
             Start-Transcript -Path $TranscriptFile -Append -ErrorAction Stop | Out-Null
             Write-OutputLog "Transcript started at $TranscriptFile."
         } catch {
-            # Non-fatal if transcript can't start (e.g., already running)
             Write-OutputLog "Could not start transcript: $_"
         }
 
@@ -91,7 +86,6 @@ function Initialize-LogsFolder {
     }
     catch {
         Write-Host "Failed to initialize logging at $LogsFolder."
-        # Avoid writing to the (possibly locked) log again here
         Read-Host -Prompt "Press Enter to exit"
         Exit 1
     }
@@ -365,7 +359,7 @@ function Copy-NixOSConfigurationFiles {
 }
 
 function Invoke-RebuildWithFlake {
-    param ([string]$flakePath = "~/.dotfiles/nix")
+    param ([string]$flakePath = "~/nix-config#nixos")
     try {
         Write-OutputLog "Rebuilding NixOS with flake configuration at $flakePath..."
         wsl.exe -d NixOS -- bash -c "sudo nixos-rebuild switch --flake $flakePath"
@@ -471,8 +465,8 @@ function Copy-NixFiles {
 
 function Remove-OldDotfilesRepo {
     try {
-        Write-OutputLog "Removing old dotfiles repository in ~/.dotfiles/nix ..."
-        wsl.exe -d NixOS -- bash -c "rm -rf ~/.dotfiles/nix"
+        Write-OutputLog "Removing old dotfiles repository in ~/nix-config#nixos ..."
+        wsl.exe -d NixOS -- bash -c "rm -rf ~/nix-config"
         Write-OutputLog "Removed old dotfiles repository."
     }
     catch {
@@ -484,8 +478,8 @@ function Remove-OldDotfilesRepo {
 
 function Invoke-CloneNewDotfilesRepo {
     try {
-        Write-OutputLog "Cloning new dotfiles repository into ~/.dotfiles/nix/ ..."
-        wsl.exe -d NixOS -- bash -c "git clone $RepoURL ~/.dotfiles/nix/"
+        Write-OutputLog "Cloning new dotfiles repository into ~/nix-config/ ..."
+        wsl.exe -d NixOS -- bash -c "git clone $RepoURL ~/nix-config/"
         Write-OutputLog "Cloned new dotfiles repository."
     }
     catch {
@@ -550,7 +544,7 @@ function main {
     Set-DefaultWSL
 
     Copy-NixOSConfigurationFiles
-    Invoke-RebuildWithFlake "~/.dotfiles/nix"
+    Invoke-RebuildWithFlake "~/nix-config#nixos"
 
     Stop-WSL
     Set-Ownership
@@ -559,10 +553,10 @@ function main {
     Remove-OldHomeManagerGcroots
     New-NixFilesDirectory
     Copy-NixFiles
-    Invoke-RebuildWithFlake "~/.dotfiles/nix"
+    Invoke-RebuildWithFlake "~/nix-config#nixos"
     Remove-OldDotfilesRepo
     Invoke-CloneNewDotfilesRepo
-    Invoke-RebuildWithFlake "~/.dotfiles/nix/NixOS/"
+    Invoke-RebuildWithFlake "~/nix-config#nixos"
 
     Write-OutputLog "Setup complete."
 
