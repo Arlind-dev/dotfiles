@@ -18,10 +18,6 @@ This project isn't finished; it's currently barely usable. It might improve as s
 - Configure Standalone Home Manager for both the `nixos` and `root` user.
 - Nix configs for my standalone server
 
-### Low Priority
-
-- Enhance the script by adding additional validation checks to see if virtualization is enabled on your CPU.
-
 ## Installing My NixOS on WSL
 
 1. **Run the Setup Script**
