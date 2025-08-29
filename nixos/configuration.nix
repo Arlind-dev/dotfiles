@@ -3,6 +3,7 @@
 {
   imports = [
     inputs.home-manager.nixosModules.home-manager
+    ./users.nix
   ];
 
   nixpkgs = {
@@ -33,21 +34,6 @@
       dates = "daily";
     };
   };
-
-  users.users.nixos = {
-    isNormalUser = true;
-    shell = pkgs.zsh;
-    extraGroups = [ "wheel" ];
-    initialPassword = "correcthorsebatterystaple";
-    openssh.authorizedKeys.keys = [ ];
-  };
-
-  home-manager = {
-    extraSpecialArgs = { inherit inputs; };
-    users.nixos = import ../home-manager/home.nix;
-  };
-
-  programs.zsh.enable = true;
 
   i18n = {
     defaultLocale = "en_US.UTF-8";

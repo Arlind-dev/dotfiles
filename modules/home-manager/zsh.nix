@@ -17,7 +17,7 @@ with lib;
         d = "docker";
         d-c = "docker compose";
         ff = "fastfetch";
-        rebuild = "sudo nixos-rebuild switch --flake ~/nix-config#nixos";
+        rebuild = "sudo nixos-rebuild switch --flake ~/nix-config#nixos-wsl";
         update = "nix flake update --flake ~/nix-config";
         clean = "nix-collect-garbage -d";
         rebuild-all = "update && rebuild && clean";

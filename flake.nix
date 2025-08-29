@@ -32,8 +32,9 @@
         system = "x86_64-linux";
         specialArgs = { inherit inputs; };
         modules = [
-          nixos-wsl.nixosModules.default
+          ./nixos/configuration.nix
           ./nixos/wsl.nix
+          nixos-wsl.nixosModules.default
         ];
       };
 
@@ -41,6 +42,7 @@
         system = "x86_64-linux";
         specialArgs = { inherit inputs; };
         modules = [
+          ./nixos/configuration.nix
           ./nixos/server.nix
         ];
       };
