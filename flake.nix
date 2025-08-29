@@ -34,6 +34,7 @@
         modules = [
           nixos-wsl.nixosModules.default
           ./nixos/configuration.nix
+          ./modules/nixos/defaults.nix
           {
             system.stateVersion = "25.05";
             wsl.enable = true;
