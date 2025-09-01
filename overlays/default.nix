@@ -10,4 +10,6 @@
       config.allowUnfree = true;
     };
   };
+
+  neovim-nightly = inputs.neovim-nightly-overlay.overlays.default;
 }

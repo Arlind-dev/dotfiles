@@ -10,9 +10,11 @@
 
     nixos-wsl.url = "github:nix-community/NixOS-WSL/release-25.05";
     nixos-wsl.inputs.nixpkgs.follows = "nixpkgs";
+
+    neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
   };
 
-  outputs = { self, nixpkgs, home-manager, nixos-wsl, ... }@inputs: let
+  outputs = { self, nixpkgs, home-manager, nixos-wsl, neovim-nightly-overlay, ... }@inputs: let
     systems = [
       "aarch64-linux" "i686-linux" "x86_64-linux"
       "aarch64-darwin" "x86_64-darwin"
