@@ -46,6 +46,15 @@
           ./nixos/server.nix
         ];
       };
+
+      nixos-pc = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./nixos/configuration.nix
+          ./nixos/pc.nix
+        ];
+      };
     };
   };
 }
