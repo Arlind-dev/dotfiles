@@ -35,6 +35,8 @@
     };
   };
 
+  programs.zsh.enable = true;
+
   i18n = {
     defaultLocale = "en_US.UTF-8";
     extraLocaleSettings.LANG = "en_US.UTF-8";

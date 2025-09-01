@@ -19,7 +19,6 @@ with lib;
       zip
       gh
       dig
-      zsh
     ];
   };
 }
