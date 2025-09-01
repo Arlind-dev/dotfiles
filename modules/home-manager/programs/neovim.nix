@@ -10,7 +10,6 @@ with lib;
       enable = true;
       package = pkgs.neovim;
 
-      # Optional: Add some basic configuration
       viAlias = true;
       vimAlias = true;
       vimdiffAlias = true;
