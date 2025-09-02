@@ -11,6 +11,10 @@
     ../modules/nixos/default.nix
   ];
 
+  virtualisation.docker = {
+    enable = enableDocker;
+  };
+
   myModules = {
     utilities.enable = true;
   };
