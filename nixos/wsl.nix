@@ -12,7 +12,7 @@
   ];
 
   virtualisation.docker = {
-    enable = enableDocker;
+    enable = true;
   };
 
   myModules = {
