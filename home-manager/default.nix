@@ -3,6 +3,9 @@
 {
   imports = [
     ../modules/home-manager
+    ./pc.nix
+    ./server.nix
+    ./wsl.nix
   ];
 
   nixpkgs = {
@@ -16,18 +19,16 @@
   };
 
   home = {
-    username = "nixos";
-    homeDirectory = "/home/nixos";
+    username = "arlind";
+    homeDirectory = "/home/arlind";
     stateVersion = "25.05";
   };
 
   programs.home-manager.enable = true;
   systemd.user.startServices = "sd-switch";
 
-  myModules = {
-    git.enable = true;
-    zsh.enable = true;
-    neovim.enable = true;
-    tmux.enable = true;
-  };
+  environment.variables = {
+    EDITOR = "nvim";
+    GPG_TTY = "$(tty)";
+    KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
 }

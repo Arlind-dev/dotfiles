@@ -45,4 +45,11 @@
   time.timeZone = "Europe/Zurich";
 
   system.stateVersion = "25.05";
+
+  system.autoUpgrade = {
+    enable = true;
+    dates = "04:00";
+    allowReboot = false;
+    flake = "/home/arlind/nix-config#nixos-wsl";
+  };
 }

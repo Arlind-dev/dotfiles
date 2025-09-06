@@ -3,7 +3,7 @@
   networking.hostName = "nixos-wsl";
 
   wsl.enable = true;
-  wsl.defaultUser = "nixos";
+  wsl.defaultUser = "arlind";
 
   programs.nix-ld.enable = true;
 

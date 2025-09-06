@@ -1,7 +1,7 @@
 { inputs, pkgs, ... }:
 
 {
-  users.users.nixos = {
+  users.users.arlind = {
     isNormalUser = true;
     shell = pkgs.zsh;
     extraGroups = [ "wheel" ];
@@ -11,6 +11,6 @@
 
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
-    users.nixos = import ../home-manager/default.nix;
+    users.arlind = import ../home-manager/default.nix;
   };
 }
