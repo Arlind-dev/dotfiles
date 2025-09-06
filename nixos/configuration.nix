@@ -52,4 +52,10 @@
     allowReboot = false;
     flake = "/home/arlind/nix-config#nixos-wsl";
   };
+
+  environment.variables = {
+    EDITOR = "nvim";
+    GPG_TTY = "$(tty)";
+    KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
+  };
 }
