@@ -11,6 +11,6 @@
 
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
-    users.nixos = import ../home-manager/home.nix;
+    users.nixos = import ../home-manager/default.nix;
   };
 }
