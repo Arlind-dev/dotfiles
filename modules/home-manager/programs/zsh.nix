@@ -12,7 +12,9 @@ with lib;
       enableCompletion = true;
       autosuggestion.enable = true;
       syntaxHighlighting.enable = true;
-
+      initExtra = ''
+        cd /home/arlind
+      '';
       shellAliases = {
         d = "docker";
         d-c = "docker compose";
@@ -23,7 +25,6 @@ with lib;
         rebuild-all = "update && rebuild && clean";
         nix-repo-ssh = "git -C ~/nix-config remote set-url origin git@github.com:Arlind-dev/dotfiles.git";
       };
-
       oh-my-zsh = {
         enable = true;
         plugins = [ "git" ];
